@@ -1,0 +1,3 @@
+Much of the skeletal animation code is from ThinMatrix's YouTube tutorials at: https://www.youtube.com/playlist?list=PLRIWtICgwaX2tKWCxdeB7Wv_rTET9JtWW
+
+The code can be found here: https://github.com/TheThinMatrix/OpenGL-Animation

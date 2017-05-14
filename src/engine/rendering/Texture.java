@@ -14,6 +14,8 @@ public interface Texture {
 	
 	public void bind();
 	
+	public void bind(int unit);
+	
 	public void unbind();
 	
 	public void activeTexture(int unit);

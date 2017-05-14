@@ -24,5 +24,7 @@ public interface Shader {
 	public void unbind();
 	
 	public void delete();
+	
+	public void bindAttribute(int index, String name);
 
 }

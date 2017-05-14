@@ -1,8 +1,10 @@
 package engine;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
@@ -13,6 +15,23 @@ import com.esotericsoftware.minlog.Log;
 public class IOUtils {
 	
 	private static final int DEFAULT_CHUNK_SIZE = 4096;
+	
+	public static String readStringQuietly(InputStream in) {
+		try {
+			return readString(in);
+		} catch (IOException e) {
+			Log.error("Failed to read text from input stream " + in, e);
+			return null;
+		}
+	}
+	
+	public static String readString(InputStream in) throws IOException {
+		StringBuilder builder = new StringBuilder();
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+			reader.lines().forEach(line -> builder.append(line).append('\n'));
+		}
+		return builder.toString();
+	}
 	
 	public static ByteBuffer toBuffer(byte[] data) {
 		ByteBuffer buffer = BufferUtils.createByteBuffer(data.length);

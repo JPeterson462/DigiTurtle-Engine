@@ -2,6 +2,7 @@ package engine.rendering;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import engine.CoreSettings;
 import engine.GraphicsSettings;
@@ -16,7 +17,11 @@ public interface Renderer {
 
 	public Texture createTexture(InputStream stream, boolean repeat);
 	
-	public Shader createShader(InputStream vertexStream, InputStream fragmentStream);
+	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes);
+	
+	public Framebuffer createFramebuffer(int colorAttachments);
+
+	public Framebuffer createFramebuffer(int width, int height, int colorAttachments);
 	
 	public void destroyContext(FreeFunction deinitFunction);
 	
@@ -25,5 +30,9 @@ public interface Renderer {
 	public void prepareContext();
 	
 	public void updateContext();
+	
+	public int getFPS();
+
+	public float getDeltaTime();
 	
 }

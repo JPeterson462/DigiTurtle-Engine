@@ -39,6 +39,22 @@ public class GLTexture implements Texture {
 		texture.unbind();
 	}
 	
+	public GLTexture(boolean repeat, int width, int height, int format, int type) {
+		this.width = width;
+		this.height = height;
+		this.type = -1;
+		texture = new library.opengl.GLTexture(GL11.GL_TEXTURE_2D);
+		texture.bind();
+		texture.magFilter(GL11.GL_LINEAR);
+		texture.minFilter(GL11.GL_LINEAR_MIPMAP_LINEAR);
+		int wrap = repeat ? GL11.GL_REPEAT : GL12.GL_CLAMP_TO_EDGE;
+		texture.wrapS(wrap);
+		texture.wrapT(wrap);
+		texture.texImage(format, format, type, null, width, height);
+		texture.generateMipmaps();
+		texture.unbind();
+	}
+	
 	private int getFormat(int components) {
 		if (components == 4) {
 			return GL11.GL_RGBA;
@@ -91,6 +107,12 @@ public class GLTexture implements Texture {
 	}
 
 	@Override
+	public void bind(int unit) {
+		texture.activeTexture(unit);
+		texture.bind();
+	}
+
+	@Override
 	public void unbind() {
 		texture.unbind();
 	}
@@ -103,6 +125,10 @@ public class GLTexture implements Texture {
 	@Override
 	public int getID() {
 		return texture.getID();
+	}
+	
+	public int hashCode() {
+		return texture.hashCode();
 	}
 
 }

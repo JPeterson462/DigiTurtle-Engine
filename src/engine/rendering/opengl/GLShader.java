@@ -1,12 +1,18 @@
 package engine.rendering.opengl;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.opengl.GL20;
 
+import com.esotericsoftware.minlog.Log;
+
+import engine.IOUtils;
 import engine.rendering.Shader;
 import library.opengl.GLProgram;
 
@@ -16,8 +22,29 @@ public class GLShader implements Shader {
 	
 	private library.opengl.GLShader vertexShader, fragmentShader;
 
-	public GLShader(InputStream vertexStream, InputStream fragmentStream) {
-		
+	public GLShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes) {
+		program = new GLProgram();
+		vertexShader = new library.opengl.GLShader(GL20.GL_VERTEX_SHADER);
+		vertexShader.source(IOUtils.readStringQuietly(vertexStream));
+		if (!vertexShader.compile()) {
+			Log.error("Vertex Shader did not compile: " + vertexShader.getLog());
+			throw new IllegalStateException();
+		}
+		fragmentShader = new library.opengl.GLShader(GL20.GL_FRAGMENT_SHADER);
+		fragmentShader.source(IOUtils.readStringQuietly(fragmentStream));
+		if (!fragmentShader.compile()) {
+			Log.error("Fragment Shader did not compile: " + fragmentShader.getLog());
+			throw new IllegalStateException();
+		}
+		program.attach(vertexShader.getID());
+		program.attach(fragmentShader.getID());
+		for (Map.Entry<Integer, String> attribute : attributes.entrySet()) {
+			program.bindAttribute(attribute.getKey(), attribute.getValue());
+		}
+		if (!program.compile()) {
+			Log.error("Program did not compile: " + program.getLog());
+			throw new IllegalStateException();
+		}
 	}
 	
 	@Override
@@ -65,6 +92,11 @@ public class GLShader implements Shader {
 	@Override
 	public void delete() {
 		program.delete();
+	}
+
+	@Override
+	public void bindAttribute(int index, String name) {
+		program.bindAttribute(index, name);
 	}
 
 }

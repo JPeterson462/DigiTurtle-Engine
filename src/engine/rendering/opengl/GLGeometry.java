@@ -96,9 +96,19 @@ public class GLGeometry implements Geometry {
 	
 	private int[] getAttributes(int flags) {
 		int attributeCount = 0;
-		
+		if ((flags & Vertex.POSITION_BIT) != 0) {
+			attributeCount++;
+		}
+		if ((flags & Vertex.TEXTURE_COORD_BIT) != 0) {
+			attributeCount++;
+		}
+		if ((flags & Vertex.NORMAL_BIT) != 0) {
+			attributeCount++;
+		}
 		int[] attributes = new int[attributeCount];
-		
+		for (int i = 0; i < attributes.length; i++) {
+			attributes[i] = i;
+		}
 		return attributes;
 	}
 	
@@ -150,6 +160,16 @@ public class GLGeometry implements Geometry {
 			elementVbo.delete();
 		}
 		vao.delete();
+	}
+	
+	public int hashCode() {
+		int hashCode = 0;
+		hashCode = 31 * hashCode + vao.hashCode();
+		hashCode = 31 * hashCode + dataVbo.hashCode();
+		if (elementVbo != null) {
+			hashCode = 31 * hashCode + elementVbo.hashCode();
+		}
+		return hashCode;
 	}
 
 }

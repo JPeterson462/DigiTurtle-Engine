@@ -3,3 +3,27 @@
 	- OpenAL API
 	- GLFW API
 	- Started rendering API
+5/13/17:
+	- Unit testing of base API
+	- Basic rendering working
+	- Framebuffers working (although it only renders as a fullscreen quad)
+	- Scene API
+	- FPS
+	- Geometry pass of Deferred Rendering
+5/14/17:
+	- Started lighting
+
+TODO
+	- Asset I/O
+	- Instanced Geometry
+	- Window Icons
+	- Skeleton
+	- Shaders
+		Lighting
+		- Separate lighting types to different shaders
+		Normal Mapping
+		Skeletal
+		Materials
+	- Render from other hashmaps in geometry pass
+	- Decal and transparency passes? (others?)
+	- "God rays"

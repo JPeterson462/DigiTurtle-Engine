@@ -13,19 +13,27 @@ import com.esotericsoftware.minlog.Log;
 public class GLFWWindow {
 	
 	private long window;
-
-	public void createFullscreen(GLFWMonitor monitor, String title) {
-		createFullscreen(monitor, title, new Vector2i(monitor.getWidth(), monitor.getHeight()));
-	}
 	
-	public void createFullscreen(GLFWMonitor monitor, String title, Vector2i size) {
-		GLFWErrorCallback.createPrint(System.err).set();
+	public static void initialize() {
 		if (!GLFW.glfwInit())
 			Log.error("Failed to create display", new IllegalStateException("Invalid GLFW Context"));
+	}
+	
+	public void createFullscreen(GLFWMonitor monitor, String title) {
+		createFullscreen(monitor, title, true);
+	}
+
+	public void createFullscreen(GLFWMonitor monitor, String title, boolean vSync) {
+		createFullscreen(monitor, title, new Vector2i(monitor.getWidth(), monitor.getHeight()), vSync);
+	}
+	
+	public void createFullscreen(GLFWMonitor monitor, String title, Vector2i size, boolean vSync) {
+		GLFWErrorCallback.createPrint(System.err).set();
 		GLFW.glfwDefaultWindowHints();
 		GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
 		window = GLFW.glfwCreateWindow(size.x, size.y, title, monitor.getPointer(), MemoryUtil.NULL);
 		GLFW.glfwMakeContextCurrent(window);
+		GLFW.glfwSwapInterval(vSync ? 1 : 0);
 		GL.createCapabilities();
 		if (!GL.getCapabilities().OpenGL33) {
 			throw new IllegalStateException("This application requires OpenGL 3.3 or newer!");
@@ -51,15 +59,13 @@ public class GLFWWindow {
 
 	public void createWindowed(Vector2i size, String title, Vector2i position, boolean resizable, boolean vSync) {
 		GLFWErrorCallback.createPrint(System.err).set();
-		if (!GLFW.glfwInit())
-			Log.error("Failed to create display", new IllegalStateException("Invalid GLFW Context"));
 		GLFW.glfwDefaultWindowHints();
 		GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
 		GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, resizable ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
 		window = GLFW.glfwCreateWindow(size.x, size.y, title, MemoryUtil.NULL, MemoryUtil.NULL);
 		GLFW.glfwSetWindowPos(window, position.x, position.y);
-		GLFW.glfwSwapInterval(vSync ? 1 : 0);
 		GLFW.glfwMakeContextCurrent(window);
+		GLFW.glfwSwapInterval(vSync ? 1 : 0);
 		GL.createCapabilities();
 		if (!GL.getCapabilities().OpenGL33) {
 			throw new IllegalStateException("This application requires OpenGL 3.3 or newer!");

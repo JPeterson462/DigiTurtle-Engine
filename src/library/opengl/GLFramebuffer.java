@@ -19,16 +19,24 @@ public class GLFramebuffer implements GLResource {
 	}
 	
 	public void drawBuffers(int count) {
-		if (count > 0) {
+		if (count > 1) {
 			int[] buffers = new int[count];
 			for (int i = 0; i < count; i++) {
 				buffers[i] = GL30.GL_COLOR_ATTACHMENT0 + i;
 			}
 			GL20.glDrawBuffers(buffers);
-		} else {
+		} 
+		else if (count == 1) {
+			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
+		}
+		else {
 			GL11.glDrawBuffer(GL11.GL_NONE);
 			GL11.glReadBuffer(GL11.GL_NONE);
 		}
+	}
+	
+	public void bind() {
+		GL30.glBindFramebuffer(type, id);
 	}
 	
 	public void bind(int width, int height) {

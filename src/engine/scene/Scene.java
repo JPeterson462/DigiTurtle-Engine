@@ -6,6 +6,8 @@ import java.util.HashMap;
 import org.joml.Vector3f;
 
 import engine.Camera;
+import engine.CoreSettings;
+import engine.GraphicsSettings;
 import engine.rendering.Geometry;
 import engine.rendering.Renderer;
 
@@ -23,12 +25,22 @@ public class Scene {
 	
 	private ArrayList<Light> lights = new ArrayList<>();
 	
-	public Scene(Renderer renderer, RenderingStrategy strategy) {
+	private float lightLevel = 0.5f;
+	
+	public Scene(Renderer renderer, RenderingStrategy strategy, CoreSettings coreSettings, GraphicsSettings graphicsSettings) {
 		switch (strategy) {
 			case DEFERRED:
-				pipeline = new DeferredRenderingPipeline(renderer);
+				pipeline = new DeferredRenderingPipeline(renderer, coreSettings, graphicsSettings);
 				break;
 		}
+	}
+	
+	public float getLightLevel() {
+		return lightLevel;
+	}
+	
+	public void setLightLevel(float lightLevel) {
+		this.lightLevel = lightLevel;
 	}
 	
 	public void addLight(Light light) {
@@ -76,7 +88,7 @@ public class Scene {
 	
 	public void render(Camera camera, Vector3f cameraPosition) {
 		pipeline.doGeometryPass(camera, defaultEntities, normalMappedEntities, defaultSkeletalEntities, normalMappedSkeletalEntities);
-		pipeline.doLightingPass(camera, lights, cameraPosition);
+		pipeline.doLightingPass(lightLevel, camera, lights, cameraPosition);
 		pipeline.doFinalRender();
 	}
 

@@ -15,7 +15,7 @@ public interface RenderingPipeline {
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> defaultSkeletalEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities);
 	
-	public void doLightingPass(Camera camera, ArrayList<Light> lights, Vector3f cameraPosition);
+	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition);
 	
 	public void doFinalRender();
 

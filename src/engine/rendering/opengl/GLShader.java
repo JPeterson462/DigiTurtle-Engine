@@ -85,6 +85,11 @@ public class GLShader implements Shader {
 	}
 
 	@Override
+	public void uploadFloat(int location, float value) {
+		program.upload(location, value);
+	}
+
+	@Override
 	public void unbind() {
 		program.unbind();
 	}

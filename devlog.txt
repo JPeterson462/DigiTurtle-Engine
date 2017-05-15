@@ -12,6 +12,8 @@
 	- Geometry pass of Deferred Rendering
 5/14/17:
 	- Started lighting
+	- Point lights
+	- Ambient lights
 
 TODO
 	- Asset I/O
@@ -20,10 +22,16 @@ TODO
 	- Skeleton
 	- Shaders
 		Lighting
-		- Separate lighting types to different shaders
+		- Directional
+		- Cone
 		Normal Mapping
 		Skeletal
 		Materials
 	- Render from other hashmaps in geometry pass
 	- Decal and transparency passes? (others?)
 	- "God rays"
+	- Bind without clearing framebuffer
+	- Watch for z-fighting
+	- Update lighting later with We Shall Wake lighting source
+	- Lighting looks fake
+	- Fade light edges

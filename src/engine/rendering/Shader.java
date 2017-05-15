@@ -20,6 +20,8 @@ public interface Shader {
 	public void uploadVector(int location, Vector4f vector);
 	
 	public void uploadMatrix(int location, Matrix4f matrix);
+
+	public void uploadFloat(int location, float value);
 	
 	public void unbind();
 	

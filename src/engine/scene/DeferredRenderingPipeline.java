@@ -7,8 +7,10 @@ import java.util.Map;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-
+import org.joml.Vector4f;
 import engine.Camera;
+import engine.CoreSettings;
+import engine.GraphicsSettings;
 import engine.rendering.Framebuffer;
 import engine.rendering.Geometry;
 import engine.rendering.Renderer;
@@ -18,17 +20,26 @@ import engine.rendering.Vertex;
 
 public class DeferredRenderingPipeline implements RenderingPipeline {
 	
-	private Shader defaultGeometryShader, lightingShader;
+	private Shader defaultGeometryShader, pointLightShader, ambientLightShader;
 	
 	private Framebuffer geometryPass, lightingPass;
 	
 	private Geometry lightingFullscreenPass;
 	
+	private CoreSettings coreSettings;
+	
+	private GraphicsSettings graphicsSettings;
+	
 	private int defaultGeometryShader_viewMatrix, defaultGeometryShader_modelMatrix,
 		defaultGeometryShader_projectionMatrix;
-	private int lightingShader_viewMatrix, lightingShader_projectionMatrix;
+	private int pointLightShader_viewMatrix, pointLightShader_projectionMatrix,
+		pointLightShader_invViewMatrix, pointLightShader_invProjectionMatrix,
+		pointLightShader_near, pointLightShader_far;
+	private int ambientLightShader_viewMatrix, ambientLightShader_projectionMatrix;
 	
-	public DeferredRenderingPipeline(Renderer renderer) {
+	public DeferredRenderingPipeline(Renderer renderer, CoreSettings coreSettings, GraphicsSettings graphicsSettings) {
+		this.coreSettings = coreSettings;
+		this.graphicsSettings = graphicsSettings;
 		geometryPass = renderer.createFramebuffer(2);
 		lightingPass = renderer.createFramebuffer(1);
 		HashMap<Integer, String> attributes = new HashMap<>();
@@ -44,11 +55,20 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
-		lightingShader = renderer.createShader(getShader("lightingVertex"), getShader("lightingFragment"), attributes);
-		lightingShader.bind();
-		lightingShader_viewMatrix = lightingShader.getUniformLocation("viewMatrix");
-		lightingShader_projectionMatrix = lightingShader.getUniformLocation("projectionMatrix");
-		lightingShader.unbind();
+		pointLightShader = renderer.createShader(getShader("lightingVertex"), getShader("lightingPointFragment"), attributes);
+		pointLightShader.bind();
+		pointLightShader_viewMatrix = pointLightShader.getUniformLocation("viewMatrix");
+		pointLightShader_projectionMatrix = pointLightShader.getUniformLocation("projectionMatrix");
+		pointLightShader_invViewMatrix = pointLightShader.getUniformLocation("invViewMatrix");
+		pointLightShader_invProjectionMatrix = pointLightShader.getUniformLocation("invProjectionMatrix");
+		pointLightShader_near = pointLightShader.getUniformLocation("near");
+		pointLightShader_far = pointLightShader.getUniformLocation("far");
+		pointLightShader.unbind();
+		ambientLightShader = renderer.createShader(getShader("lightingVertex"), getShader("lightingAmbientFragment"), attributes);
+		ambientLightShader.bind();
+		ambientLightShader_viewMatrix = ambientLightShader.getUniformLocation("viewMatrix");
+		ambientLightShader_projectionMatrix = ambientLightShader.getUniformLocation("projectionMatrix");
+		ambientLightShader.unbind();
 		lightingFullscreenPass = createFullscreenQuad(renderer);
 	}
 	
@@ -118,31 +138,86 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	}
 
 	@Override
-	public void doLightingPass(Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
+	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
 //		lightingPass.bind();
-		lightingShader.bind();
-		lightingShader.uploadMatrix(lightingShader_projectionMatrix, camera.getProjectionMatrix());
-		lightingShader.uploadMatrix(lightingShader_viewMatrix, camera.getViewMatrix());
-		int lightColorUniform = lightingShader.getUniformLocation("lightColor");
-		int lightPosUniform = lightingShader.getUniformLocation("lightPos");
-		int viewPosUniform = lightingShader.getUniformLocation("viewPos");
-		int diffuseTextureUniform = lightingShader.getUniformLocation("diffuseTexture");
-		int normalTextureUniform = lightingShader.getUniformLocation("normalTexture");
-		lightingShader.uploadVector(lightColorUniform, new Vector3f(1, 0, 0));
-		lightingShader.uploadVector(lightPosUniform, new Vector3f(0, 0, 0));
-		lightingShader.uploadVector(viewPosUniform, cameraPosition);
-		lightingShader.uploadInteger(diffuseTextureUniform, 0);
-		lightingShader.uploadInteger(normalTextureUniform, 1);
-		lightingFullscreenPass.bind();
-		geometryPass.getColorTexture(0).bind(0);
-		geometryPass.getColorTexture(1).bind(1);
-		lightingFullscreenPass.render();
-		geometryPass.getColorTexture(0).unbind();
-		lightingFullscreenPass.unbind();
-		lightingShader.unbind();
+		renderAmbientLights(lightLevel, ambientLightShader, camera, lights);
+		renderPointLights(pointLightShader, camera, lights, cameraPosition);
 //		lightingPass.unbind();
 	}
 	
+	private Matrix4f inverseProjectionMatrix = new Matrix4f(), inverseViewMatrix = new Matrix4f();
+	private int lightColorUniform, lightPosUniform, viewPosUniform, lightRadiusUniform, diffuseTextureUniform, 
+		normalTextureUniform, depthTextureUniform;
+	private boolean pointLightUniformsSet = false;
+	
+	private void renderPointLights(Shader lightingShader, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
+		camera.getProjectionMatrix().invert(inverseProjectionMatrix);
+		camera.getViewMatrix().invert(inverseViewMatrix);
+		lightingShader.bind();
+		lightingShader.uploadMatrix(pointLightShader_projectionMatrix, camera.getProjectionMatrix());
+		lightingShader.uploadMatrix(pointLightShader_viewMatrix, camera.getViewMatrix());
+		lightingShader.uploadMatrix(pointLightShader_invProjectionMatrix, inverseProjectionMatrix);
+		lightingShader.uploadMatrix(pointLightShader_invViewMatrix, inverseViewMatrix);
+		lightingShader.uploadFloat(pointLightShader_near, graphicsSettings.near);
+		lightingShader.uploadFloat(pointLightShader_far, graphicsSettings.far);
+		if (!pointLightUniformsSet) {
+			pointLightUniformsSet = true;
+			lightColorUniform = lightingShader.getUniformLocation("lightColor");
+			lightPosUniform = lightingShader.getUniformLocation("lightPos");
+			viewPosUniform = lightingShader.getUniformLocation("viewPos");
+			lightRadiusUniform = lightingShader.getUniformLocation("lightRadius");
+			diffuseTextureUniform = lightingShader.getUniformLocation("diffuseTexture");
+			normalTextureUniform = lightingShader.getUniformLocation("normalTexture");
+			depthTextureUniform = lightingShader.getUniformLocation("depthTexture");
+			lightingShader.uploadInteger(diffuseTextureUniform, 0);
+			lightingShader.uploadInteger(normalTextureUniform, 1);
+			lightingShader.uploadInteger(depthTextureUniform, 2);
+		}
+		lightingShader.uploadVector(viewPosUniform, cameraPosition);
+		lightingFullscreenPass.bind();
+		geometryPass.getColorTexture(0).bind(0);
+		geometryPass.getColorTexture(1).bind(1);
+		geometryPass.getDepthTexture().bind(2);
+		for (int i = 0; i < lights.size(); i++) {
+			Light light = lights.get(i);
+			if (light instanceof PointLight) {
+				PointLight pointLight = (PointLight) light;
+				lightingShader.uploadVector(lightColorUniform, pointLight.getColor());
+				lightingShader.uploadVector(lightPosUniform, pointLight.getPosition());
+				lightingShader.uploadFloat(lightRadiusUniform, pointLight.getRange());
+				lightingFullscreenPass.render();
+			}
+		}
+		geometryPass.getColorTexture(0).unbind();
+		lightingFullscreenPass.unbind();
+		lightingShader.unbind();
+	}
+	
+	private Vector4f ambientLightColor = new Vector4f();
+	private void renderAmbientLights(float lightLevel, Shader lightingShader, Camera camera, ArrayList<Light> lights) {
+		lightingShader.bind();
+		lightingShader.uploadMatrix(ambientLightShader_projectionMatrix, camera.getProjectionMatrix());
+		lightingShader.uploadMatrix(ambientLightShader_viewMatrix, camera.getViewMatrix());
+		int lightColorUniform = lightingShader.getUniformLocation("lightColor");
+		int diffuseTextureUniform = lightingShader.getUniformLocation("diffuseTexture");
+		lightingShader.uploadInteger(diffuseTextureUniform, 0);
+		lightingFullscreenPass.bind();
+		geometryPass.getColorTexture(0).bind(0);
+		for (int i = 0; i < lights.size(); i++) {
+			Light light = lights.get(i);
+			if (light instanceof AmbientLight) {
+				AmbientLight ambientLight = (AmbientLight) light;
+				ambientLightColor.set(ambientLight.getColor(), lightLevel);
+				lightingShader.uploadVector(lightColorUniform, ambientLightColor);
+				lightingFullscreenPass.render();
+			}
+		}
+		geometryPass.getColorTexture(0).unbind();		
+		lightingFullscreenPass.unbind();
+		lightingShader.unbind();
+	}
+	//TODO send depth,inverted matrices
+
 	@Override
 	public void doFinalRender() {
 //		GL11.glBindTexture(GL11.GL_TEXTURE_2D, geometryPass.getDepthTexture().getID());

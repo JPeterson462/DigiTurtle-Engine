@@ -57,6 +57,7 @@ public class GLRenderer implements Renderer {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthFunc(GL11.GL_LEQUAL);
 		GL11.glEnable(GL30.GL_CLIP_DISTANCE0);
 		GL11.glEnable(GL13.GL_MULTISAMPLE);
 		GL11.glViewport(0, 0, width, height);
@@ -160,6 +161,17 @@ public class GLRenderer implements Renderer {
 			}
 		}
 		return 1f / fps;
+	}
+
+	@Override
+	public void enableAdditiveRendering() {
+		
+	}
+
+	@Override
+	public void disableAdditiveRendering() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

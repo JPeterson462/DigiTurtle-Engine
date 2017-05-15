@@ -163,15 +163,4 @@ public class GLRenderer implements Renderer {
 		return 1f / fps;
 	}
 
-	@Override
-	public void enableAdditiveRendering() {
-		
-	}
-
-	@Override
-	public void disableAdditiveRendering() {
-		// TODO Auto-generated method stub
-		
-	}
-
 }

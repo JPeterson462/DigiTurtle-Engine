@@ -2,6 +2,7 @@ package engine.scene;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,10 +18,16 @@ import engine.rendering.Renderer;
 import engine.rendering.Shader;
 import engine.rendering.Texture;
 import engine.rendering.Vertex;
+import engine.skeleton.SkeletonComponent;
+import engine.world.AmbientLight;
+import engine.world.Entity;
+import engine.world.Light;
+import engine.world.Material;
+import engine.world.PointLight;
 
 public class DeferredRenderingPipeline implements RenderingPipeline {
 	
-	private Shader defaultGeometryShader, pointLightShader, ambientLightShader;
+	private Shader defaultGeometryShader, normalMappedGeometryShader, defaultSkeletalGeometryShader, pointLightShader, ambientLightShader;
 	
 	private Framebuffer geometryPass, lightingPass;
 	
@@ -32,6 +39,10 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	
 	private int defaultGeometryShader_viewMatrix, defaultGeometryShader_modelMatrix,
 		defaultGeometryShader_projectionMatrix;
+	private int defaultSkeletalGeometryShader_viewMatrix, defaultSkeletalGeometryShader_modelMatrix,
+		defaultSkeletalGeometryShader_projectionMatrix;
+	private int normalMappedGeometryShader_viewMatrix, normalMappedGeometryShader_modelMatrix,
+		normalMappedGeometryShader_projectionMatrix;
 	private int pointLightShader_viewMatrix, pointLightShader_projectionMatrix,
 		pointLightShader_invViewMatrix, pointLightShader_invProjectionMatrix,
 		pointLightShader_near, pointLightShader_far;
@@ -51,7 +62,32 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		defaultGeometryShader_viewMatrix = defaultGeometryShader.getUniformLocation("viewMatrix");
 		defaultGeometryShader_modelMatrix = defaultGeometryShader.getUniformLocation("modelMatrix");
 		defaultGeometryShader_projectionMatrix = defaultGeometryShader.getUniformLocation("projectionMatrix");
+		defaultGeometryShader.uploadInteger(defaultGeometryShader.getUniformLocation("diffuseTexture"), 0);
 		defaultGeometryShader.unbind();
+		attributes = new HashMap<>();
+		attributes.put(0, "in_Position");
+		attributes.put(1, "in_TextureCoord");
+		attributes.put(2, "in_Normal");
+		normalMappedGeometryShader = renderer.createShader(getShader("defaultVertex"), getShader("normalFragment"), attributes);
+		normalMappedGeometryShader.bind();
+		normalMappedGeometryShader_viewMatrix = normalMappedGeometryShader.getUniformLocation("viewMatrix");
+		normalMappedGeometryShader_modelMatrix = normalMappedGeometryShader.getUniformLocation("modelMatrix");
+		normalMappedGeometryShader_projectionMatrix = normalMappedGeometryShader.getUniformLocation("projectionMatrix");
+		normalMappedGeometryShader.uploadInteger(normalMappedGeometryShader.getUniformLocation("diffuseTexture"), 0);
+		normalMappedGeometryShader.uploadInteger(normalMappedGeometryShader.getUniformLocation("normalTexture"), 1);
+		normalMappedGeometryShader.unbind();
+		attributes.put(0, "in_Position");
+		attributes.put(1, "in_TextureCoord");
+		attributes.put(2, "in_Normal");
+		attributes.put(3, "in_Joints");
+		attributes.put(4, "in_Weights");
+		defaultSkeletalGeometryShader = renderer.createShader(getShader("skeletalVertex"), getShader("defaultFragment"), attributes);
+		defaultSkeletalGeometryShader.bind();
+		defaultSkeletalGeometryShader_viewMatrix = defaultSkeletalGeometryShader.getUniformLocation("viewMatrix");
+		defaultSkeletalGeometryShader_modelMatrix = defaultSkeletalGeometryShader.getUniformLocation("modelMatrix");
+		defaultSkeletalGeometryShader_projectionMatrix = defaultSkeletalGeometryShader.getUniformLocation("projectionMatrix");
+		defaultSkeletalGeometryShader.uploadInteger(defaultSkeletalGeometryShader.getUniformLocation("diffuseTexture"), 0);
+		defaultSkeletalGeometryShader.unbind();
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
@@ -99,15 +135,21 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities) {
 		Matrix4f modelMatrix = new Matrix4f();
 		geometryPass.bind();
-		renderGeometry(modelMatrix, defaultGeometryShader, camera, defaultEntities, false);
+		renderGeometry(modelMatrix, defaultGeometryShader, camera, defaultEntities, false, false,
+				defaultGeometryShader_projectionMatrix, defaultGeometryShader_viewMatrix, defaultGeometryShader_modelMatrix);
+		renderGeometry(modelMatrix, normalMappedGeometryShader, camera, normalMappedEntities, true, false, 
+				normalMappedGeometryShader_projectionMatrix, normalMappedGeometryShader_viewMatrix, normalMappedGeometryShader_modelMatrix);
+		renderGeometry(modelMatrix, defaultSkeletalGeometryShader, camera, defaultSkeletalEntities, false, true,
+				defaultSkeletalGeometryShader_projectionMatrix, defaultSkeletalGeometryShader_viewMatrix, defaultSkeletalGeometryShader_modelMatrix);
 		geometryPass.unbind();
 	}
 	
 	private void renderGeometry(Matrix4f modelMatrix, Shader shader, Camera camera, 
-			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> entities, boolean normalMapped) {
+			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> entities, boolean normalMapped, boolean skeletal,
+			int projectionMatrixLocation, int viewMatrixLocation, int modelMatrixLocation) {
 		shader.bind();
-		shader.uploadMatrix(defaultGeometryShader_projectionMatrix, camera.getProjectionMatrix());
-		shader.uploadMatrix(defaultGeometryShader_viewMatrix, camera.getViewMatrix());
+		shader.uploadMatrix(projectionMatrixLocation, camera.getProjectionMatrix());
+		shader.uploadMatrix(viewMatrixLocation, camera.getViewMatrix());
 		for (Map.Entry<Geometry, HashMap<Material, ArrayList<Entity>>> entitiesGeometry : entities.entrySet()) {
 			Geometry geometry = entitiesGeometry.getKey();
 			geometry.bind();
@@ -123,8 +165,14 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 				}
 				//TODO upload lighting constants
 				for (Entity entity : entitiesMaterial.getValue()) {
+					if (skeletal) {
+						Matrix4f[] jointTransforms = entity.getComponent(SkeletonComponent.class).getSkeleton().getJointTransforms();
+						for (int i = 0; i < jointTransforms.length; i++) {
+							shader.uploadMatrix(shader.getUniformLocation("jointTransforms[" + i + "]"), jointTransforms[i]);
+						}
+					}
 					modelMatrix.identity().translationRotateScale(entity.getPosition(), entity.getOrientation(), entity.getScale());
-					shader.uploadMatrix(defaultGeometryShader_modelMatrix, modelMatrix);
+					shader.uploadMatrix(modelMatrixLocation, modelMatrix);
 					geometry.render();
 				}
 				diffuseTexture.unbind();
@@ -216,7 +264,6 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		lightingFullscreenPass.unbind();
 		lightingShader.unbind();
 	}
-	//TODO send depth,inverted matrices
 
 	@Override
 	public void doFinalRender() {

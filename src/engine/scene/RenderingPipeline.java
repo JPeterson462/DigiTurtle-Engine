@@ -7,6 +7,9 @@ import org.joml.Vector3f;
 
 import engine.Camera;
 import engine.rendering.Geometry;
+import engine.world.Entity;
+import engine.world.Light;
+import engine.world.Material;
 
 public interface RenderingPipeline {
 	

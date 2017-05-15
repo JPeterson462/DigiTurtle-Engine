@@ -35,8 +35,4 @@ public interface Renderer {
 
 	public float getDeltaTime();
 	
-	public void enableAdditiveRendering();
-	
-	public void disableAdditiveRendering();
-	
 }

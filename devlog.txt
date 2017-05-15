@@ -14,6 +14,9 @@
 	- Started lighting
 	- Point lights
 	- Ambient lights
+5/15/17:
+	- Component based entities
+	- Model importing
 
 TODO
 	- Asset I/O
@@ -35,3 +38,10 @@ TODO
 	- Update lighting later with We Shall Wake lighting source
 	- Lighting looks fake
 	- Fade light edges
+
+	- OBJ Material Loading
+	- Water
+	- Shadows
+	
+	- AnimatedModel
+	- Animation

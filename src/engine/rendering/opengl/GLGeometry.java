@@ -57,6 +57,18 @@ public class GLGeometry implements Geometry {
 				dataBuffer.put(position + 2, vertex.normal().z);
 				position += 3;
 			}
+			if ((flags & Vertex.JOINTID_BIT) != 0) {
+				dataBuffer.put(position + 0, vertex.jointIDs().x);
+				dataBuffer.put(position + 1, vertex.jointIDs().y);
+				dataBuffer.put(position + 2, vertex.jointIDs().z);
+				position += 3;
+			}
+			if ((flags & Vertex.WEIGHT_BIT) != 0) {
+				dataBuffer.put(position + 0, vertex.weights().x);
+				dataBuffer.put(position + 1, vertex.weights().y);
+				dataBuffer.put(position + 2, vertex.weights().z);
+				position += 3;
+			}
 		}
 		dataVbo = new GLVertexBufferObject(GL15.GL_ARRAY_BUFFER);
 		dataVbo.bind();
@@ -73,6 +85,16 @@ public class GLGeometry implements Geometry {
 			offset += 2;
 		}
 		if ((flags & Vertex.NORMAL_BIT) != 0) {
+			vao.vertexAttributeFloat(index, 3, vertexSize << 2, offset << 2);
+			index++;
+			offset += 3;
+		}
+		if ((flags & Vertex.JOINTID_BIT) != 0) {
+			vao.vertexAttributeFloat(index, 3, vertexSize << 2, offset << 2);
+			index++;
+			offset += 3;
+		}
+		if ((flags & Vertex.WEIGHT_BIT) != 0) {
 			vao.vertexAttributeFloat(index, 3, vertexSize << 2, offset << 2);
 			index++;
 			offset += 3;
@@ -105,6 +127,12 @@ public class GLGeometry implements Geometry {
 		if ((flags & Vertex.NORMAL_BIT) != 0) {
 			attributeCount++;
 		}
+		if ((flags & Vertex.JOINTID_BIT) != 0) {
+			attributeCount++;
+		}
+		if ((flags & Vertex.WEIGHT_BIT) != 0) {
+			attributeCount++;
+		}
 		int[] attributes = new int[attributeCount];
 		for (int i = 0; i < attributes.length; i++) {
 			attributes[i] = i;
@@ -121,6 +149,12 @@ public class GLGeometry implements Geometry {
 			size += 2;
 		}
 		if ((flags & Vertex.NORMAL_BIT) != 0) {
+			size += 3;
+		}
+		if ((flags & Vertex.JOINTID_BIT) != 0) {
+			size += 3;
+		}
+		if ((flags & Vertex.WEIGHT_BIT) != 0) {
 			size += 3;
 		}
 		return size;

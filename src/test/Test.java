@@ -21,6 +21,7 @@ import engine.scene.MeshComponent;
 import engine.scene.RenderingStrategy;
 import engine.scene.SceneRenderer;
 import engine.skeleton.AnimationComponent;
+import engine.skeleton.Skeleton.Joint;
 import engine.skeleton.SkeletonComponent;
 import engine.world.AmbientLight;
 import engine.world.Entity;
@@ -92,22 +93,22 @@ public class Test {
 			scene.addEntity(entity);
 			
 			scene.addLight(new AmbientLight(1, 1, 1));
-			PointLight pointLight = new PointLight(1, 1, 1);
+			PointLight pointLight = new PointLight(0, 0, 1);
 			pointLight.setRange(100);
-			pointLight.setPosition(0, 0, 100);
+			pointLight.setPosition(0, 10, 0);
 			scene.addLight(pointLight);
-			scene.setLightLevel(1f);
+			scene.setLightLevel(0.5f);
 		});
 		while (renderer.validContext()) {
 			float dt = renderer.getDeltaTime();
 			renderer.prepareContext();
 			
 			t += 180 * dt;
-			float dist = 20;
+			float dist = 15;
 			
 			entity.setOrientation(new Quaternionf().rotationY((float) Math.toRadians(t)));
 			
-			cameraPosition.set(0, 0, dist);
+			cameraPosition.set(0, 5, dist);
 //			cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)) + 5, dist, dist * (float) Math.sin(Math.toRadians(t)) + 5);
 			camera.getViewMatrix().setLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0, 0, 0, 0, 1, 0);
 			
@@ -121,5 +122,5 @@ public class Test {
 			//cleanup
 		});
 	}
-
+	
 }

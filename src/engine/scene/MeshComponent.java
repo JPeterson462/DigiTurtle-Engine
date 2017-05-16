@@ -45,7 +45,6 @@ public class MeshComponent implements Component {
 				vertex.jointIDs(oldVertices.get(i).getJointIds());
 				vertex.weights(oldVertices.get(i).getWeights());
 			}
-			System.out.println(vertex.position());
 			vertices.add(vertex);
 		}
 		return vertices;

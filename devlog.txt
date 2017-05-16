@@ -17,12 +17,12 @@
 5/15/17:
 	- Component based entities
 	- Model importing
+	- Skeleton animation
 
 TODO
 	- Asset I/O
 	- Instanced Geometry
 	- Window Icons
-	- Skeleton
 	- Shaders
 		Lighting
 		- Directional
@@ -42,6 +42,3 @@ TODO
 	- OBJ Material Loading
 	- Water
 	- Shadows
-	
-	- AnimatedModel
-	- Animation

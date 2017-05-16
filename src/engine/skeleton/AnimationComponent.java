@@ -88,20 +88,79 @@ public class AnimationComponent implements Component {
 		}
 		return currentPose;
 	}
+
+	private Vector3f previousOffset = new Vector3f(), nextOffset = new Vector3f(), position = new Vector3f();
+	
+	private Quaternionf previousRotation = new Quaternionf(), nextRotation = new Quaternionf(), rotation = new Quaternionf();
 	
 	private Matrix4f interpolate(Matrix4f previousTransform, Matrix4f nextTransform, float progression) {
-		Quaternionf previousRotation = fromMatrix(previousTransform),
-				nextRotation = fromMatrix(nextTransform), 
-				interpolatedRotation = new Quaternionf();
-		Vector3f previousOffset = new Vector3f(previousTransform.m30(), previousTransform.m31(), previousTransform.m32()), 
-				nextOffset = new Vector3f(nextTransform.m30(), nextTransform.m31(), nextTransform.m32()), 
-				interpolatedOffset = new Vector3f();
-		previousOffset.lerp(nextOffset, progression, interpolatedOffset);
-		previousRotation.slerp(nextRotation, progression, interpolatedRotation);
-		return new Matrix4f().translationRotate(interpolatedOffset.x, interpolatedOffset.y, interpolatedOffset.z, interpolatedRotation);
+		fromMatrix(previousTransform, previousRotation);
+		fromMatrix(nextTransform, nextRotation);
+		previousOffset.set(previousTransform.m30(), previousTransform.m31(), previousTransform.m32());
+		nextOffset.set(nextTransform.m30(), nextTransform.m31(), nextTransform.m32());
+		interpolate(previousOffset, nextOffset, progression, position);
+		interpolate(previousRotation, nextRotation, progression, rotation);
+		Matrix4f matrix = new Matrix4f();
+		matrix.translate(position);
+		matrix.mul(toRotationMatrix(rotation), matrix);
+		return matrix;
 	}
-	
-	private Quaternionf fromMatrix(Matrix4f matrix) {
+
+	private void interpolate(Vector3f start, Vector3f end, float progression, Vector3f target) {
+		float x = start.x + (end.x - start.x) * progression;
+		float y = start.y + (end.y - start.y) * progression;
+		float z = start.z + (end.z - start.z) * progression;
+		target.set(x, y, z);
+	}
+
+	private void interpolate(Quaternionf a, Quaternionf b, float blend, Quaternionf result) {
+		float dot = a.w * b.w + a.x * b.x + a.y * b.y + a.z * b.z;
+		float blendI = 1f - blend;
+		if (dot < 0) {
+			result.w = blendI * a.w + blend * -b.w;
+			result.x = blendI * a.x + blend * -b.x;
+			result.y = blendI * a.y + blend * -b.y;
+			result.z = blendI * a.z + blend * -b.z;
+		} else {
+			result.w = blendI * a.w + blend * b.w;
+			result.x = blendI * a.x + blend * b.x;
+			result.y = blendI * a.y + blend * b.y;
+			result.z = blendI * a.z + blend * b.z;
+		}
+		result.normalize();
+	}
+
+	private Matrix4f toRotationMatrix(Quaternionf rotation) {
+		Matrix4f matrix = new Matrix4f();
+		final float xy = rotation.x * rotation.y;
+		final float xz = rotation.x * rotation.z;
+		final float xw = rotation.x * rotation.w;
+		final float yz = rotation.y * rotation.z;
+		final float yw = rotation.y * rotation.w;
+		final float zw = rotation.z * rotation.w;
+		final float xSquared = rotation.x * rotation.x;
+		final float ySquared = rotation.y * rotation.y;
+		final float zSquared = rotation.z * rotation.z;
+		matrix.m00(1 - 2 * (ySquared + zSquared));
+		matrix.m01(2 * (xy - zw));
+		matrix.m02(2 * (xz + yw));
+		matrix.m03(0);
+		matrix.m10(2 * (xy + zw));
+		matrix.m11(1 - 2 * (xSquared + zSquared));
+		matrix.m12(2 * (yz - xw));
+		matrix.m13(0);
+		matrix.m20(2 * (xz - yw));
+		matrix.m21(2 * (yz + xw));
+		matrix.m22(1 - 2 * (xSquared + ySquared));
+		matrix.m23(0);
+		matrix.m30(0);
+		matrix.m31(0);
+		matrix.m32(0);
+		matrix.m33(1);
+		return matrix;
+	}
+
+	private void fromMatrix(Matrix4f matrix, Quaternionf rotation) {
 		float w, x, y, z;
 		float diagonal = matrix.m00() + matrix.m11() + matrix.m22();
 		if (diagonal > 0) {
@@ -129,7 +188,7 @@ public class AnimationComponent implements Component {
 			y = (matrix.m12() + matrix.m21()) / z4;
 			z = z4 / 4f;
 		}
-		return new Quaternionf(x, y, z, w);
-}
+		rotation.set(x, y, z, w);
+	}
 
 }

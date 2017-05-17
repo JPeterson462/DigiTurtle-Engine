@@ -2,7 +2,6 @@ package engine.scene;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,14 +19,17 @@ import engine.rendering.Texture;
 import engine.rendering.Vertex;
 import engine.skeleton.SkeletonComponent;
 import engine.world.AmbientLight;
+import engine.world.DirectionalLight;
 import engine.world.Entity;
 import engine.world.Light;
 import engine.world.Material;
 import engine.world.PointLight;
+import engine.world.SpotLight;
 
 public class DeferredRenderingPipeline implements RenderingPipeline {
 	
-	private Shader defaultGeometryShader, normalMappedGeometryShader, defaultSkeletalGeometryShader, pointLightShader, ambientLightShader;
+	private Shader defaultGeometryShader, normalMappedGeometryShader, defaultSkeletalGeometryShader, 
+		normalMappedSkeletalGeometryShader, pointLightShader, ambientLightShader;
 	
 	private Framebuffer geometryPass, lightingPass;
 	
@@ -43,16 +45,22 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		defaultSkeletalGeometryShader_projectionMatrix;
 	private int normalMappedGeometryShader_viewMatrix, normalMappedGeometryShader_modelMatrix,
 		normalMappedGeometryShader_projectionMatrix;
+	private int normalMappedSkeletalGeometryShader_viewMatrix, normalMappedSkeletalGeometryShader_modelMatrix,
+		normalMappedSkeletalGeometryShader_projectionMatrix;
 	private int pointLightShader_viewMatrix, pointLightShader_projectionMatrix,
 		pointLightShader_invViewMatrix, pointLightShader_invProjectionMatrix,
 		pointLightShader_near, pointLightShader_far;
 	private int ambientLightShader_viewMatrix, ambientLightShader_projectionMatrix;
 	
+	private Renderer renderer;
+	
 	public DeferredRenderingPipeline(Renderer renderer, CoreSettings coreSettings, GraphicsSettings graphicsSettings) {
+		this.renderer = renderer;
 		this.coreSettings = coreSettings;
 		this.graphicsSettings = graphicsSettings;
 		geometryPass = renderer.createFramebuffer(2);
 		lightingPass = renderer.createFramebuffer(1);
+		// Default Geometry
 		HashMap<Integer, String> attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
@@ -64,6 +72,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		defaultGeometryShader_projectionMatrix = defaultGeometryShader.getUniformLocation("projectionMatrix");
 		defaultGeometryShader.uploadInteger(defaultGeometryShader.getUniformLocation("diffuseTexture"), 0);
 		defaultGeometryShader.unbind();
+		// Normal Mapped Geometry
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
@@ -76,6 +85,8 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		normalMappedGeometryShader.uploadInteger(normalMappedGeometryShader.getUniformLocation("diffuseTexture"), 0);
 		normalMappedGeometryShader.uploadInteger(normalMappedGeometryShader.getUniformLocation("normalTexture"), 1);
 		normalMappedGeometryShader.unbind();
+		// Skeletal Geometry
+		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
 		attributes.put(2, "in_Normal");
@@ -88,10 +99,25 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		defaultSkeletalGeometryShader_projectionMatrix = defaultSkeletalGeometryShader.getUniformLocation("projectionMatrix");
 		defaultSkeletalGeometryShader.uploadInteger(defaultSkeletalGeometryShader.getUniformLocation("diffuseTexture"), 0);
 		defaultSkeletalGeometryShader.unbind();
+		// Normal Mapped Skeletal
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
-		pointLightShader = renderer.createShader(getShader("lightingVertex"), getShader("lightingPointFragment"), attributes);
+		attributes.put(2, "in_Normal");
+		attributes.put(3, "in_Joints");
+		attributes.put(4, "in_Weights");
+		normalMappedSkeletalGeometryShader = renderer.createShader(getShader("skeletalVertex"), getShader("normalFragment"), attributes);
+		normalMappedSkeletalGeometryShader.bind();
+		normalMappedSkeletalGeometryShader_viewMatrix = normalMappedSkeletalGeometryShader.getUniformLocation("viewMatrix");
+		normalMappedSkeletalGeometryShader_modelMatrix = normalMappedSkeletalGeometryShader.getUniformLocation("modelMatrix");
+		normalMappedSkeletalGeometryShader_projectionMatrix = normalMappedSkeletalGeometryShader.getUniformLocation("projectionMatrix");
+		normalMappedSkeletalGeometryShader.uploadInteger(normalMappedSkeletalGeometryShader.getUniformLocation("diffuseTexture"), 0);
+		normalMappedSkeletalGeometryShader.unbind();
+		// General Light Shader
+		attributes = new HashMap<>();
+		attributes.put(0, "in_Position");
+		attributes.put(1, "in_TextureCoord");
+		pointLightShader = renderer.createShader(getShader("lightingVertex"), getShader("lightingFragment"), attributes);
 		pointLightShader.bind();
 		pointLightShader_viewMatrix = pointLightShader.getUniformLocation("viewMatrix");
 		pointLightShader_projectionMatrix = pointLightShader.getUniformLocation("projectionMatrix");
@@ -100,11 +126,13 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		pointLightShader_near = pointLightShader.getUniformLocation("near");
 		pointLightShader_far = pointLightShader.getUniformLocation("far");
 		pointLightShader.unbind();
+		// Ambient Light Shader
 		ambientLightShader = renderer.createShader(getShader("lightingVertex"), getShader("lightingAmbientFragment"), attributes);
 		ambientLightShader.bind();
 		ambientLightShader_viewMatrix = ambientLightShader.getUniformLocation("viewMatrix");
 		ambientLightShader_projectionMatrix = ambientLightShader.getUniformLocation("projectionMatrix");
 		ambientLightShader.unbind();
+		// Fullscreen Pass
 		lightingFullscreenPass = createFullscreenQuad(renderer);
 	}
 	
@@ -141,6 +169,8 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 				normalMappedGeometryShader_projectionMatrix, normalMappedGeometryShader_viewMatrix, normalMappedGeometryShader_modelMatrix);
 		renderGeometry(modelMatrix, defaultSkeletalGeometryShader, camera, defaultSkeletalEntities, false, true,
 				defaultSkeletalGeometryShader_projectionMatrix, defaultSkeletalGeometryShader_viewMatrix, defaultSkeletalGeometryShader_modelMatrix);
+		renderGeometry(modelMatrix, normalMappedSkeletalGeometryShader, camera, normalMappedSkeletalEntities, true, true,
+				normalMappedSkeletalGeometryShader_projectionMatrix, normalMappedSkeletalGeometryShader_viewMatrix, normalMappedSkeletalGeometryShader_modelMatrix);
 		geometryPass.unbind();
 	}
 	
@@ -189,16 +219,19 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
 //		lightingPass.bind();
 		renderAmbientLights(lightLevel, ambientLightShader, camera, lights);
-		renderPointLights(pointLightShader, camera, lights, cameraPosition);
+		renderer.enableAdditiveBlending();
+		renderLights(pointLightShader, camera, lights, cameraPosition);
+		renderer.disableAdditiveBlending();
 //		lightingPass.unbind();
 	}
 	
 	private Matrix4f inverseProjectionMatrix = new Matrix4f(), inverseViewMatrix = new Matrix4f();
-	private int lightColorUniform, lightPosUniform, viewPosUniform, lightRadiusUniform, diffuseTextureUniform, 
-		normalTextureUniform, depthTextureUniform;
+	private int lightColorUniform, lightPosUniform, viewPosUniform, diffuseTextureUniform, 
+		normalTextureUniform, depthTextureUniform, directionalUniform, spotDirUniform;
 	private boolean pointLightUniformsSet = false;
+	private Vector4f lightPos = new Vector4f(), packedDir = new Vector4f();
 	
-	private void renderPointLights(Shader lightingShader, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
+	private void renderLights(Shader lightingShader, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
 		camera.getProjectionMatrix().invert(inverseProjectionMatrix);
 		camera.getViewMatrix().invert(inverseViewMatrix);
 		lightingShader.bind();
@@ -213,10 +246,11 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 			lightColorUniform = lightingShader.getUniformLocation("lightColor");
 			lightPosUniform = lightingShader.getUniformLocation("lightPos");
 			viewPosUniform = lightingShader.getUniformLocation("viewPos");
-			lightRadiusUniform = lightingShader.getUniformLocation("lightRadius");
 			diffuseTextureUniform = lightingShader.getUniformLocation("diffuseTexture");
 			normalTextureUniform = lightingShader.getUniformLocation("normalTexture");
 			depthTextureUniform = lightingShader.getUniformLocation("depthTexture");
+			directionalUniform = lightingShader.getUniformLocation("directional");
+			spotDirUniform = lightingShader.getUniformLocation("lightDirPacked");
 			lightingShader.uploadInteger(diffuseTextureUniform, 0);
 			lightingShader.uploadInteger(normalTextureUniform, 1);
 			lightingShader.uploadInteger(depthTextureUniform, 2);
@@ -230,9 +264,30 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 			Light light = lights.get(i);
 			if (light instanceof PointLight) {
 				PointLight pointLight = (PointLight) light;
+				lightPos.set(pointLight.getPosition(), 1f / pointLight.getRange());
 				lightingShader.uploadVector(lightColorUniform, pointLight.getColor());
-				lightingShader.uploadVector(lightPosUniform, pointLight.getPosition());
-				lightingShader.uploadFloat(lightRadiusUniform, pointLight.getRange());
+				lightingShader.uploadVector(lightPosUniform, lightPos);
+				lightingShader.uploadInteger(directionalUniform, 1);
+				lightingShader.uploadVector(spotDirUniform, packedDir);
+				lightingFullscreenPass.render();
+			}
+			else if (light instanceof DirectionalLight) {
+				DirectionalLight directionalLight = (DirectionalLight) light;
+				lightPos.set(directionalLight.getDirection(), 0);
+				lightingShader.uploadVector(lightColorUniform, directionalLight.getColor());
+				lightingShader.uploadVector(lightPosUniform, lightPos);
+				lightingShader.uploadInteger(directionalUniform, 0);
+				lightingShader.uploadVector(spotDirUniform, packedDir);
+				lightingFullscreenPass.render();
+			}
+			else if (light instanceof SpotLight) {
+				SpotLight spotLight = (SpotLight) light;
+				lightPos.set(spotLight.getPosition(), 1f / spotLight.getRange());
+				packedDir.set(spotLight.getDirection(), spotLight.getPackedAngle());
+				lightingShader.uploadVector(lightColorUniform, spotLight.getColor());
+				lightingShader.uploadVector(lightPosUniform, lightPos);
+				lightingShader.uploadInteger(directionalUniform, 2);
+				lightingShader.uploadVector(spotDirUniform, packedDir);
 				lightingFullscreenPass.render();
 			}
 		}

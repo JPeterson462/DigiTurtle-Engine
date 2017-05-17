@@ -12,9 +12,9 @@ import org.lwjgl.opengl.GL20;
 
 import com.esotericsoftware.minlog.Log;
 
-import engine.IOUtils;
 import engine.rendering.Shader;
 import library.opengl.GLProgram;
+import utils.IOUtils;
 
 public class GLShader implements Shader {
 	

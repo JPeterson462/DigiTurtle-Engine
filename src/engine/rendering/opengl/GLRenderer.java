@@ -163,4 +163,14 @@ public class GLRenderer implements Renderer {
 		return 1f / fps;
 	}
 
+	@Override
+	public void enableAdditiveBlending() {
+		GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
+	}
+
+	@Override
+	public void disableAdditiveBlending() {
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+	}
+
 }

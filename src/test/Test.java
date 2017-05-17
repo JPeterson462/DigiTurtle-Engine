@@ -23,10 +23,20 @@ import engine.scene.SceneRenderer;
 import engine.skeleton.AnimationComponent;
 import engine.skeleton.Skeleton.Joint;
 import engine.skeleton.SkeletonComponent;
+import engine.sound.Music;
+import engine.sound.SoundSystem;
+import engine.sound.openal.ALSoundSystem;
 import engine.world.AmbientLight;
+import engine.world.DirectionalLight;
 import engine.world.Entity;
 import engine.world.Material;
 import engine.world.PointLight;
+import engine.world.SpotLight;
+import engine.world.World;
+import library.audio.AudioData;
+import library.audio.AudioDecoderLibrary;
+import library.audio.AudioStream;
+import library.audio.VorbisDecoder;
 import library.models.Animation;
 import library.models.AnimationImporterLibrary;
 import library.models.ColladaAnimationImporter;
@@ -50,6 +60,13 @@ public class Test {
 	private static double t = 0;
 	
 	private static Entity entity;
+	
+	private static World world;
+	private static SpotLight spotLight;
+	
+	private static SoundSystem soundSystem;
+	
+	private static Music music;
 	
 	public static void main(String[] args) {
 		Log.set(Log.LEVEL_DEBUG);
@@ -90,35 +107,67 @@ public class Test {
 			entity.addComponent(new AnimationComponent());
 			entity.getComponent(AnimationComponent.class).doAnimation(animation);
 			
-			scene.addEntity(entity);
+			world = new World();
 			
-			scene.addLight(new AmbientLight(1, 1, 1));
-			PointLight pointLight = new PointLight(0, 0, 1);
-			pointLight.setRange(100);
-			pointLight.setPosition(0, 10, 0);
-			scene.addLight(pointLight);
-			scene.setLightLevel(0.5f);
+			world.addEntity(entity);
+			
+			world.addLight(new AmbientLight(1, 1, 1));
+//			PointLight pointLight = new PointLight(0, 0, 1);
+//			pointLight.setRange(20);
+//			pointLight.setPosition(0, 25, 4);
+//			world.addLight(pointLight);
+//			DirectionalLight directionalLight = new DirectionalLight(1, 1, 0);
+//			directionalLight.setDirection(-1, -1, -1);
+//			world.addLight(directionalLight);
+			spotLight = new SpotLight(0, 1, 0);
+			spotLight.setRange(30);
+			spotLight.setPosition(0, 25, 25);
+			spotLight.setAngle((float) Math.PI / 1f);
+			spotLight.setDirection(0, 1, 0);
+			world.addLight(spotLight);
+			scene.setLightLevel(0.6f);
+			
+			AudioDecoderLibrary.registerDecoder(new VorbisDecoder());
+			
+			soundSystem = new ALSoundSystem();
+			soundSystem.createContext();
+			
+			AudioData data = new AudioData();
+			AudioStream stream = AudioDecoderLibrary.findDecoder("ogx").openStream(Test.class.getResourceAsStream("01_Critical_Acclaim.ogx.ogg"), data);
+			music = soundSystem.createMusic(stream, data);
+			music.setLooping(true);
+			music.play();
 		});
 		while (renderer.validContext()) {
 			float dt = renderer.getDeltaTime();
 			renderer.prepareContext();
 			
 			t += 180 * dt;
-			float dist = 15;
+			float dist = 50;
 			
-			entity.setOrientation(new Quaternionf().rotationY((float) Math.toRadians(t)));
+			entity.setScale(new Vector3f(5));
+//			entity.setOrientation(new Quaternionf().rotationY((float) Math.toRadians(t)));
 			
-			cameraPosition.set(0, 5, dist);
+			Vector3f v = new Vector3f(10 * (float) Math.cos(Math.toRadians(t)), 0, 10 * (float) Math.sin(Math.toRadians(t)));
+			spotLight.setDirection(v);
+			
+			float height = 25;
+			cameraPosition.set(0, height, dist);
 //			cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)) + 5, dist, dist * (float) Math.sin(Math.toRadians(t)) + 5);
-			camera.getViewMatrix().setLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0, 0, 0, 0, 1, 0);
+			camera.getViewMatrix().setLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0, height, 0, 0, 1, 0);
 			
 			entity.update(dt);
 			
-			scene.render(camera, cameraPosition);
+			soundSystem.checkError();
+			music.update();
+			
+			scene.render(camera, cameraPosition, world);
 			
 			renderer.updateContext();
 		}
 		renderer.destroyContext(() -> {
+			music.delete();
+			soundSystem.destroyContext();
 			//cleanup
 		});
 	}

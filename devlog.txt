@@ -18,27 +18,42 @@
 	- Component based entities
 	- Model importing
 	- Skeleton animation
+5/16/17:
+	- More organized scenegraph
+	- Fixed point lights
+	- Directional lights
+	- Normal mapped skeletal animation
+	- Spot Lights
+	- Audio system
 
 TODO
+	- Shadows
+	- MD5 importer
+	- OBJ Material Loading?
+	
+	- Distance field font rendering
+	- Percentage closer filtering
+	- Anisotropic filtering and antialiasing (FXAA)
+	
 	- Asset I/O
 	- Instanced Geometry
 	- Window Icons
 	- Shaders
 		Lighting
-		- Directional
-		- Cone
-		Normal Mapping
-		Skeletal
+		- Project vectors with view matrix (v' = view * v)
 		Materials
-	- Render from other hashmaps in geometry pass
-	- Decal and transparency passes? (others?)
+	- Decal and transparency passes (others?)
 	- "God rays"
-	- Bind without clearing framebuffer
 	- Watch for z-fighting
-	- Update lighting later with We Shall Wake lighting source
-	- Lighting looks fake
-	- Fade light edges
+	
+	- What else needs Components?
+	- Order independent transparency
 
-	- OBJ Material Loading
-	- Water
-	- Shadows
+	- Input processing
+	- Terrain; Multitexturing
+	
+	- Skybox
+	- Mouse Picking
+	- Physics engine
+	- Particle system
+	- Water rendering

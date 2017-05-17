@@ -7,8 +7,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.stb.STBImage;
 
-import engine.IOUtils;
 import engine.rendering.Texture;
+import utils.IOUtils;
 
 public class GLTexture implements Texture {
 	

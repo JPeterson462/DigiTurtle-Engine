@@ -101,7 +101,7 @@ public class AnimationComponent implements Component {
 		interpolate(previousOffset, nextOffset, progression, position);
 		interpolate(previousRotation, nextRotation, progression, rotation);
 		Matrix4f matrix = new Matrix4f();
-		matrix.translate(position);
+		matrix.setTranslation(position);
 		matrix.mul(toRotationMatrix(rotation), matrix);
 		return matrix;
 	}

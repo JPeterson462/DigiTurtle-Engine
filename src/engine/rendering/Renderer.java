@@ -35,4 +35,8 @@ public interface Renderer {
 
 	public float getDeltaTime();
 	
+	public void enableAdditiveBlending();
+	
+	public void disableAdditiveBlending();
+	
 }

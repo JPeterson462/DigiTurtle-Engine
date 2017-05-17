@@ -14,12 +14,41 @@ public class ALSource implements ALResource {
 	
 	private int id;
 	
+	private ALBuffer[] buffers;
+	
 	public ALSource() {
 		id = AL10.alGenSources();
 		vec3.limit(vec3.capacity());
 		if (AL.getCapabilities().AL_SOFT_direct_channels) {
 			AL10.alSourcei(id, SOFTDirectChannels.AL_DIRECT_CHANNELS_SOFT, AL10.AL_TRUE);
 		}
+	}
+	
+	public void queueBuffers(ALBuffer... buffers) {
+		this.buffers = buffers;
+		int[] handles = new int[buffers.length];
+		for (int i = 0; i < buffers.length; i++) {
+			handles[i] = buffers[i].getID();
+		}
+		AL10.alSourceQueueBuffers(id, handles);
+	}
+	
+	public void queueBuffer(ALBuffer buffer) {
+		AL10.alSourceQueueBuffers(id, buffer.getID());
+	}
+	
+	public int getBuffersProcessed() {
+		return AL10.alGetSourcei(id, AL10.AL_BUFFERS_PROCESSED);
+	}
+	
+	public ALBuffer unqueueBuffer() {
+		int buffer = AL10.alSourceUnqueueBuffers(id);
+		for (int i = 0; i < buffers.length; i++) {
+			if (buffers[i].getID() == buffer) {
+				return buffers[i];
+			}
+		}
+		return null;
 	}
 	
 	public void attachBuffer(ALBuffer buffer) {
@@ -68,6 +97,14 @@ public class ALSource implements ALResource {
 	
 	public boolean equals(Object object) {
 		return object instanceof ALSource && ((ALSource) object).id == id;
+	}
+
+	public void play() {
+		AL10.alSourcePlay(id);
+	}
+	
+	public void stop() {
+		AL10.alSourceStop(id);
 	}
 
 }

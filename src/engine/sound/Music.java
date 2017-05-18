@@ -13,5 +13,9 @@ public interface Music {
 	public void delete();
 	
 	public void setLooping(boolean looping);
+	
+	public float getTime();
+	
+	public float getLength();
 
 }

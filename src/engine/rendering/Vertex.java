@@ -16,6 +16,8 @@ public class Vertex {
 	
 	public static final int WEIGHT_BIT = (1 << 4);
 	
+	public static final int POSITION2D_BIT = (1 << 5);
+	
 	private Vector3f position = new Vector3f();
 	
 	private Vector2f textureCoord = new Vector2f();

@@ -46,6 +46,11 @@ public class GLGeometry implements Geometry {
 				dataBuffer.put(position + 2, vertex.position().z);
 				position += 3;
 			}
+			if ((flags & Vertex.POSITION2D_BIT) != 0) {
+				dataBuffer.put(position + 0, vertex.position().x);
+				dataBuffer.put(position + 1, vertex.position().y);
+				position += 2;				
+			}
 			if ((flags & Vertex.TEXTURE_COORD_BIT) != 0) {
 				dataBuffer.put(position + 0, vertex.textureCoord().x);
 				dataBuffer.put(position + 1, vertex.textureCoord().y);
@@ -78,6 +83,11 @@ public class GLGeometry implements Geometry {
 			vao.vertexAttributeFloat(index, 3, vertexSize << 2, offset << 2);
 			index++;
 			offset += 3;
+		}
+		if ((flags & Vertex.POSITION2D_BIT) != 0) {
+			vao.vertexAttributeFloat(index, 2, vertexSize << 2, offset << 2);
+			index++;
+			offset += 2;
 		}
 		if ((flags & Vertex.TEXTURE_COORD_BIT) != 0) {
 			vao.vertexAttributeFloat(index, 2, vertexSize << 2, offset << 2);
@@ -121,6 +131,9 @@ public class GLGeometry implements Geometry {
 		if ((flags & Vertex.POSITION_BIT) != 0) {
 			attributeCount++;
 		}
+		if ((flags & Vertex.POSITION2D_BIT) != 0) {
+			attributeCount++;
+		}
 		if ((flags & Vertex.TEXTURE_COORD_BIT) != 0) {
 			attributeCount++;
 		}
@@ -143,6 +156,9 @@ public class GLGeometry implements Geometry {
 	private int getVertexSize(int flags) {
 		int size = 0;
 		if ((flags & Vertex.POSITION_BIT) != 0) {
+			size += 3;
+		}
+		if ((flags & Vertex.POSITION2D_BIT) != 0) {
 			size += 3;
 		}
 		if ((flags & Vertex.TEXTURE_COORD_BIT) != 0) {

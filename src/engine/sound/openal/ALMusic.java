@@ -111,4 +111,14 @@ public class ALMusic implements Music {
 		this.looping = looping;
 	}
 
+	@Override
+	public float getTime() {
+		return ((float) (data.audioLengthSamples - samplesLeft) / (float) data.audioLengthSamples) * data.audioLengthSeconds;
+	}
+
+	@Override
+	public float getLength() {
+		return data.audioLengthSeconds;
+	}
+
 }

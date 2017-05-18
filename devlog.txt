@@ -27,11 +27,18 @@
 	- Audio system
 
 TODO
+	- Class to register all of the default importers for different libraries
+	- Terrain; Multitexturing
 	- Shadows
 	- MD5 importer
 	- OBJ Material Loading?
 	
 	- Distance field font rendering
+		- Basic rendering
+		- Effects
+		- \n and \t
+		- Other types of align
+		- 2D bounds as opposed to line width
 	- Percentage closer filtering
 	- Anisotropic filtering and antialiasing (FXAA)
 	
@@ -48,12 +55,11 @@ TODO
 	
 	- What else needs Components?
 	- Order independent transparency
-
 	- Input processing
-	- Terrain; Multitexturing
 	
 	- Skybox
 	- Mouse Picking
 	- Physics engine
 	- Particle system
 	- Water rendering
+	- Writing audio to a stream (to send voice information from a server)

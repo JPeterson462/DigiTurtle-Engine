@@ -15,11 +15,13 @@ import org.lwjgl.system.MemoryUtil;
 import com.esotericsoftware.minlog.Log;
 
 import engine.sound.Listener;
+import engine.sound.Microphone;
 import engine.sound.Music;
 import engine.sound.SoundEffect;
 import engine.sound.SoundSystem;
 import library.audio.AudioData;
 import library.audio.AudioStream;
+import library.openal.ALCaptureDevice;
 
 public class ALSoundSystem implements SoundSystem {
 
@@ -99,6 +101,16 @@ public class ALSoundSystem implements SoundSystem {
 		volume = Math.min(1f, Math.max(0f, volume)); // clamp the volume
 		this.volume = volume;
 		AL10.alListenerf(AL10.AL_GAIN, volume);
+	}
+
+	@Override
+	public Microphone createMicrophone() {
+		return new ALMicrophone();
+	}
+
+	@Override
+	public int getMicrophoneFrequency() {
+		return ALCaptureDevice.DEFAULT_FREQUENCY;
 	}
 	
 }

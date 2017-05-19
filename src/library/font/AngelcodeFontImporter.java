@@ -81,8 +81,8 @@ public class AngelcodeFontImporter implements FontImporter {
 			int[] width = {0}, height = {0}, components = {0};
 			ByteBuffer pixels = STBImage.stbi_load_from_memory(textureData, width, height, components, 0);
 			texture.bind();
-			texture.magFilter(GL11.GL_NEAREST);
-			texture.minFilter(GL11.GL_NEAREST);
+			texture.magFilter(GL11.GL_LINEAR);
+			texture.minFilter(GL11.GL_LINEAR_MIPMAP_LINEAR);
 			texture.wrapS(GL12.GL_CLAMP_TO_EDGE);
 			texture.wrapS(GL12.GL_CLAMP_TO_EDGE);
 			int format = components[0] == 4 ? GL11.GL_RGBA : (components[0] == 3 ? GL11.GL_RGB : GL11.GL_ALPHA);
@@ -90,6 +90,7 @@ public class AngelcodeFontImporter implements FontImporter {
 				Log.error("Failed to load angelcode texture: " + pageData.file);
 			}
 			texture.texImage(format, format, GL11.GL_UNSIGNED_BYTE, pixels, width[0], height[0]);
+			texture.generateMipmaps();
 			texture.unbind();
 			// OpenGL Specific Code Ends Here (except for replacing Page.texture with another type)
 			HashMap<Character, Letter> pageLetters = new HashMap<>();
@@ -101,7 +102,8 @@ public class AngelcodeFontImporter implements FontImporter {
 					float t0 = (float) letterData.y / textureHeight;
 					float s1 = (float) (letterData.x + letterData.width) / textureWidth;
 					float t1 = (float) (letterData.y + letterData.height) / textureHeight;
-					pageLetters.put(letterData.c, new Letter(letterData.c, new Vector2f(letterData.xAdvance, 0), new Vector2f(letterData.xOffset, letterData.yOffset), new Vector2f(s0, t0), 
+					pageLetters.put(letterData.c, new Letter(letterData.c, new Vector2f(letterData.xAdvance, 0), 
+							new Vector2f(letterData.xOffset, letterData.yOffset), new Vector2f(s0, t0), 
 							new Vector2f(s1, t1), new Vector2f(letterData.width, letterData.height)));
 				}
 			}

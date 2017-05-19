@@ -12,7 +12,7 @@ public interface TextBuffer {
 	
 	public void setPosition(Vector2f position);
 	
-	public void setLineWidth(float lineWidth);
+	public void setBounds(float boxWidth, float boxHeight);
 	
 	public void setText(String text);
 	

@@ -25,20 +25,22 @@
 	- Normal mapped skeletal animation
 	- Spot Lights
 	- Audio system
+5/18/17:
+	- Implemented distance field text rendering
+	- Outline effect
+	- Unified codec register method
+	- Started microphone recording
 
 TODO
-	- Class to register all of the default importers for different libraries
 	- Terrain; Multitexturing
 	- Shadows
 	- MD5 importer
 	- OBJ Material Loading?
+	- Music instance that waits for audio rather than ending
 	
 	- Distance field font rendering
-		- Basic rendering
-		- Effects
-		- \n and \t
-		- Other types of align
-		- 2D bounds as opposed to line width
+		- Fix \t
+		- Small fonts
 	- Percentage closer filtering
 	- Anisotropic filtering and antialiasing (FXAA)
 	
@@ -47,6 +49,7 @@ TODO
 	- Window Icons
 	- Shaders
 		Lighting
+		- Fix cone light falloff
 		- Project vectors with view matrix (v' = view * v)
 		Materials
 	- Decal and transparency passes (others?)
@@ -62,4 +65,3 @@ TODO
 	- Physics engine
 	- Particle system
 	- Water rendering
-	- Writing audio to a stream (to send voice information from a server)

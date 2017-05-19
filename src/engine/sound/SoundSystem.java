@@ -24,5 +24,9 @@ public interface SoundSystem {
 	public float getVolume();
 	
 	public void setVolume(float volume);
+	
+	public Microphone createMicrophone();
+	
+	public int getMicrophoneFrequency();
 
 }

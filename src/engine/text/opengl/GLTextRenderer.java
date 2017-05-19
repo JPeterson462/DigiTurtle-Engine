@@ -13,26 +13,29 @@ public class GLTextRenderer implements TextRenderer {
 
 	private GLProgram shader;
 	
+	private GLShader vertexShader, fragmentShader;
+	
 	private Matrix4f projectionMatrix;
 	
-	public GLTextRenderer() {
+	public GLTextRenderer(float width, float height) {
+		projectionMatrix = new Matrix4f().ortho2D(0, width, height, 0);
 		shader = new GLProgram();
-		GLShader vertexShader = new GLShader(GL20.GL_VERTEX_SHADER);
+		vertexShader = new GLShader(GL20.GL_VERTEX_SHADER);
 		vertexShader.source(IOUtils.readStringQuietly(getClass().getResourceAsStream("textVertex.glsl")));
 		if (!vertexShader.compile()) {
-			throw new IllegalStateException("Invlaid Vertex Shader: " + vertexShader.getLog());
+			throw new IllegalStateException("Invalid Vertex Shader: " + vertexShader.getLog());
 		}
-		GLShader fragmentShader = new GLShader(GL20.GL_VERTEX_SHADER);
+		fragmentShader = new GLShader(GL20.GL_FRAGMENT_SHADER);
 		fragmentShader.source(IOUtils.readStringQuietly(getClass().getResourceAsStream("textFragment.glsl")));
 		if (!fragmentShader.compile()) {
-			throw new IllegalStateException("Invlaid Fragment Shader: " + fragmentShader.getLog());
+			throw new IllegalStateException("Invalid Fragment Shader: " + fragmentShader.getLog());
 		}
 		shader.attach(vertexShader.getID());
 		shader.attach(fragmentShader.getID());
 		shader.bindAttribute(0, "in_Position");
 		shader.bindAttribute(1, "in_TexCoord");
 		if (!shader.compile()) {
-			throw new IllegalStateException("Invalid Text Shader: " + shader.getLog());
+			throw new IllegalStateException("Invalid Text Shader: " + vertexShader.getLog() + "\n" + fragmentShader.getLog() + "\n" + shader.getLog());
 		}
 	}
 	
@@ -43,6 +46,8 @@ public class GLTextRenderer implements TextRenderer {
 
 	@Override
 	public void destroy() {
+		fragmentShader.delete();
+		vertexShader.delete();
 		shader.delete();
 	}
 

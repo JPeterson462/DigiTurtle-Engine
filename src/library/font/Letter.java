@@ -8,7 +8,7 @@ public class Letter {
 	
 	private Vector2f advance, offset, size, texCoord0, texCoord1;
 
-	public Letter(char character, Vector2f advance, Vector2f offset, Vector2f size, Vector2f texCoord0, Vector2f texCoord1) {
+	public Letter(char character, Vector2f advance, Vector2f offset, Vector2f texCoord0, Vector2f texCoord1, Vector2f size) {
 		this.character = character;
 		this.advance = advance;
 		this.offset = offset;
@@ -39,6 +39,10 @@ public class Letter {
 
 	public Vector2f getTexCoord1() {
 		return texCoord1;
+	}
+	
+	public String toString() {
+		return "Letter[" + character + ", " + advance + ", " + offset + ", " + size + ", " + texCoord0 + ", " + texCoord1 + "]";
 	}
 
 }

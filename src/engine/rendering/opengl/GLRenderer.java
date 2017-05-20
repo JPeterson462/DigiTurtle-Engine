@@ -35,12 +35,12 @@ public class GLRenderer implements Renderer {
 	
 	private CoreSettings coreSettings;
 	
-//	private GraphicsSettings graphicsSettings;
+	private GraphicsSettings graphicsSettings;
 
 	@Override
 	public void createContext(CoreSettings coreSettings, GraphicsSettings graphicsSettings, FreeFunction initFunction) {
 		this.coreSettings = coreSettings;
-//		this.graphicsSettings = graphicsSettings;
+		this.graphicsSettings = graphicsSettings;
 		GLFWWindow.initialize();
 		window = new GLFWWindow();
 		if (coreSettings.fullscreen) {
@@ -81,7 +81,7 @@ public class GLRenderer implements Renderer {
 
 	@Override
 	public Texture createTexture(InputStream stream, boolean repeat) {
-		return new GLTexture(stream, repeat);
+		return new GLTexture(stream, repeat, graphicsSettings.anisotropicFiltering);
 	}
 
 	@Override

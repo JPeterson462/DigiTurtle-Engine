@@ -30,6 +30,10 @@
 	- Outline effect
 	- Unified codec register method
 	- Started microphone recording
+5/19/17:
+	- Common asset stream interface (needs to be updated when the destination for assets changes)
+	- FXAA (antialiasing) (still somewhat slow and looks bad)
+	- Anisotropic filtering
 
 TODO
 	- Terrain; Multitexturing
@@ -39,12 +43,9 @@ TODO
 	- Music instance that waits for audio rather than ending
 	
 	- Distance field font rendering
-		- Fix \t
 		- Small fonts
 	- Percentage closer filtering
-	- Anisotropic filtering and antialiasing (FXAA)
 	
-	- Asset I/O
 	- Instanced Geometry
 	- Window Icons
 	- Shaders

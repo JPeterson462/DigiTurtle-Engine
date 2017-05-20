@@ -2,6 +2,7 @@ package library.opengl;
 
 import java.nio.ByteBuffer;
 
+import org.lwjgl.opengl.EXTTextureFilterAnisotropic;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
@@ -26,6 +27,11 @@ public class GLTexture implements GLResource {
 	
 	public void bind() {
 		GL11.glBindTexture(type, id);
+	}
+	
+	public void useAnisotropicFiltering() {
+		float anisotropicLevel = GL11.glGetFloat(EXTTextureFilterAnisotropic.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+		GL11.glTexParameterf(type, EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropicLevel);
 	}
 	
 	public void minFilter(int filter) {

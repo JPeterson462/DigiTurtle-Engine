@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import engine.Camera;
@@ -29,11 +30,11 @@ import engine.world.SpotLight;
 public class DeferredRenderingPipeline implements RenderingPipeline {
 	
 	private Shader defaultGeometryShader, normalMappedGeometryShader, defaultSkeletalGeometryShader, 
-		normalMappedSkeletalGeometryShader, pointLightShader, ambientLightShader;
+		normalMappedSkeletalGeometryShader, pointLightShader, ambientLightShader, fxaaShader;
 	
 	private Framebuffer geometryPass, lightingPass;
 	
-	private Geometry lightingFullscreenPass;
+	private Geometry lightingFullscreenPass, postProcessingPass;
 	
 	private CoreSettings coreSettings;
 	
@@ -132,8 +133,17 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		ambientLightShader_viewMatrix = ambientLightShader.getUniformLocation("viewMatrix");
 		ambientLightShader_projectionMatrix = ambientLightShader.getUniformLocation("projectionMatrix");
 		ambientLightShader.unbind();
+		// FXAA Shader
+		attributes = new HashMap<>();
+		attributes.put(0, "in_Position");
+		fxaaShader = renderer.createShader(getShader("postVertex"), getShader("fxaaFragment"), attributes);
+		fxaaShader.bind();
+		fxaaShader.uploadInteger(fxaaShader.getUniformLocation("diffuseTexture"), 0);
+		fxaaShader.uploadVector(fxaaShader.getUniformLocation("resolution"), new Vector2f(coreSettings.width, coreSettings.height));
+		fxaaShader.unbind();
 		// Fullscreen Pass
 		lightingFullscreenPass = createFullscreenQuad(renderer);
+		postProcessingPass = createPostProcessingPass(renderer);
 	}
 	
 	private Geometry createFullscreenQuad(Renderer renderer) {
@@ -150,6 +160,22 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		indices.add(3);
 		indices.add(0);
 		return renderer.createGeometry(vertices, indices, Vertex.POSITION_BIT | Vertex.TEXTURE_COORD_BIT);
+	}
+	
+	private Geometry createPostProcessingPass(Renderer renderer) {
+		ArrayList<Vertex> vertices = new ArrayList<>();
+		vertices.add(new Vertex().position(-1, -1, 0));
+		vertices.add(new Vertex().position(1, -1, 0));
+		vertices.add(new Vertex().position(1, 1, 0));
+		vertices.add(new Vertex().position(-1, 1, 0));
+		ArrayList<Integer> indices = new ArrayList<>();
+		indices.add(0);
+		indices.add(1);
+		indices.add(2);
+		indices.add(2);
+		indices.add(3);
+		indices.add(0);
+		return renderer.createGeometry(vertices, indices, Vertex.POSITION2D_BIT);
 	}
 	
 	private InputStream getShader(String name) {
@@ -217,12 +243,12 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 
 	@Override
 	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
-//		lightingPass.bind();
+		lightingPass.bind();
 		renderAmbientLights(lightLevel, ambientLightShader, camera, lights);
 		renderer.enableAdditiveBlending();
 		renderLights(pointLightShader, camera, lights, cameraPosition);
 		renderer.disableAdditiveBlending();
-//		lightingPass.unbind();
+		lightingPass.unbind();
 	}
 	
 	private Matrix4f inverseProjectionMatrix = new Matrix4f(), inverseViewMatrix = new Matrix4f();
@@ -318,6 +344,17 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		geometryPass.getColorTexture(0).unbind();		
 		lightingFullscreenPass.unbind();
 		lightingShader.unbind();
+	}
+	
+	@Override
+	public void doFXAAPass() {
+		postProcessingPass.bind();
+		fxaaShader.bind();
+		lightingPass.getColorTexture(0).activeTexture(0);
+		lightingPass.getColorTexture(0).bind();
+		postProcessingPass.render();
+		fxaaShader.unbind();
+		postProcessingPass.unbind();
 	}
 
 	@Override

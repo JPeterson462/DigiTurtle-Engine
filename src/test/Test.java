@@ -5,6 +5,7 @@ import org.joml.Vector3f;
 
 import com.esotericsoftware.minlog.Log;
 
+import engine.AssetInputStream;
 import engine.CoreSettings;
 import engine.FirstPersonCamera;
 import engine.GraphicsSettings;
@@ -73,11 +74,12 @@ public class Test {
 		CoreSettings coreSettings = new CoreSettings();
 		
 		GraphicsSettings graphicsSettings = new GraphicsSettings();
+		graphicsSettings.anisotropicFiltering = true;
 		
 		renderer.createContext(coreSettings, graphicsSettings, () -> {
 			Importers.register();
 			
-			font = FontImporterLibrary.findImporter("fnt").importFont(Test.class.getResourceAsStream("Consolas_small.fnt"), 32, (file) -> Test.class.getResourceAsStream(file));
+			font = FontImporterLibrary.findImporter("fnt").importFont(new AssetInputStream("Consolas_small.fnt"), 32, (file) -> new AssetInputStream(file));
 			
 			textRenderer = new GLTextRenderer(coreSettings.width, coreSettings.height);
 			buffer = textRenderer.createBuffer();
@@ -87,9 +89,9 @@ public class Test {
 			buffer.setText("Hello\t\t\tWorld\nHello,\t\tTest");
 			buffer.setEffect(TextEffects.newOutlineEffect(new Vector3f(1, 1, 1), new Vector3f(1, 0, 0), 0.5f, 0.7f));
 			
-			texture = renderer.createTexture(Test.class.getResourceAsStream("animatedDiffuse.png"), false);
-//			texture = renderer.createTexture(Test.class.getResourceAsStream("crate.png"), false);
-			Texture texture2 = renderer.createTexture(Test.class.getResourceAsStream("crateNormal.png"), false);
+			texture = renderer.createTexture(new AssetInputStream("animatedDiffuse.png"), false);
+//			texture = renderer.createTexture(new AssetInputStream("crate.png"), false);
+			Texture texture2 = renderer.createTexture(new AssetInputStream("crateNormal.png"), false);
 			
 			Material material = new Material();
 			material.setDiffuseTexture(texture);
@@ -98,7 +100,7 @@ public class Test {
 			scene = new SceneRenderer(renderer, RenderingStrategy.DEFERRED, coreSettings, graphicsSettings);
 			//MeshComponent mesh = new MeshComponent(geometry, material, false);
 			
-//			Model model = ModelImporterLibrary.findImporter("obj").importModel(Test.class.getResourceAsStream("crate.obj"), null);
+//			Model model = ModelImporterLibrary.findImporter("obj").importModel(new AssetInputStream("crate.obj"), null);
 //			model.setMaterial(material);
 //			MeshComponent mesh = new MeshComponent(model, renderer, true);
 			entity = new Entity();
@@ -106,9 +108,9 @@ public class Test {
 //			entity.addComponent(mesh);
 //			scene.addEntity(entity);
 			
-			Model model = ModelImporterLibrary.findImporter("dae").importModel(Test.class.getResourceAsStream("model.dae"), "Armature");
+			Model model = ModelImporterLibrary.findImporter("dae").importModel(new AssetInputStream("model.dae"), "Armature");
 			model.setMaterial(material);
-			Animation animation = AnimationImporterLibrary.findImporter("dae").importAnimation(Test.class.getResourceAsStream("model.dae"), "Armature");
+			Animation animation = AnimationImporterLibrary.findImporter("dae").importAnimation(new AssetInputStream("model.dae"), "Armature");
 			entity.addComponent(new MeshComponent(model, renderer, false));
 			entity.addComponent(new SkeletonComponent(model));
 			entity.addComponent(new AnimationComponent());
@@ -132,13 +134,13 @@ public class Test {
 			spotLight.setAngle((float) Math.PI / 180f);
 			spotLight.setDirection(0, 1, 0);
 			world.addLight(spotLight);
-			scene.setLightLevel(0.6f);
+			scene.setLightLevel(0f);
 			
 			soundSystem = new ALSoundSystem();
 			soundSystem.createContext();
 			
 			AudioData data = new AudioData();
-			AudioStream stream = AudioDecoderLibrary.findDecoder("ogx").openStream(Test.class.getResourceAsStream("01_Critical_Acclaim.ogx.ogg"), data);
+			AudioStream stream = AudioDecoderLibrary.findDecoder("ogx").openStream(new AssetInputStream("01_Critical_Acclaim.ogx.ogg"), data);
 			music = soundSystem.createMusic(stream, data);
 			music.setLooping(true);
 			music.play();

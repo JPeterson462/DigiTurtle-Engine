@@ -20,6 +20,8 @@ public interface RenderingPipeline {
 	
 	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition);
 	
+	public void doFXAAPass();
+	
 	public void doFinalRender();
 
 }

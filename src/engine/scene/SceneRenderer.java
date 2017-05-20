@@ -34,6 +34,7 @@ public class SceneRenderer {
 		pipeline.doGeometryPass(camera, world.getDefaultEntities(), world.getNormalMappedEntities(),
 				world.getDefaultSkeletalEntities(), world.getNormalMappedSkeletalEntities());
 		pipeline.doLightingPass(lightLevel, camera, world.getLights(), cameraPosition);
+		pipeline.doFXAAPass();
 		pipeline.doFinalRender();
 	}
 

@@ -3,6 +3,7 @@ package engine.rendering.opengl;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.stb.STBImage;
@@ -16,7 +17,7 @@ public class GLTexture implements Texture {
 	
 	private library.opengl.GLTexture texture;
 	
-	public GLTexture(InputStream stream, boolean repeat) {
+	public GLTexture(InputStream stream, boolean repeat, boolean anisotropicFiltering) {
 		ByteBuffer data = IOUtils.readBufferQuietly(stream);
 		int[] widthBuf = {0}, heightBuf = {0}, componentsBuf = {0};
 		ByteBuffer pixels = STBImage.stbi_load_from_memory(data, widthBuf, heightBuf, componentsBuf, 0);
@@ -30,6 +31,9 @@ public class GLTexture implements Texture {
 		texture.bind();
 		texture.magFilter(GL11.GL_LINEAR);
 		texture.minFilter(GL11.GL_LINEAR_MIPMAP_LINEAR);
+		if (GL.getCapabilities().GL_EXT_texture_filter_anisotropic) {
+			texture.useAnisotropicFiltering();
+		}
 		int wrap = repeat ? GL11.GL_REPEAT : GL12.GL_CLAMP_TO_EDGE;
 		texture.wrapS(wrap);
 		texture.wrapT(wrap);

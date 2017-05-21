@@ -8,33 +8,38 @@ import engine.rendering.Vertex;
 import engine.world.Component;
 import engine.world.Entity;
 import engine.world.Material;
+import library.models.Mesh;
 import library.models.Model;
 
 public class MeshComponent implements Component {
 
 	private int flags;
 
-	private Geometry geometry;
+	private ArrayList<Geometry> geometry = new ArrayList<>();
 
-	private Material material;
+	private ArrayList<Material> materials = new ArrayList<>();
 
 	public MeshComponent(Geometry geometry, Material material, boolean normalMapped) {
 		flags = (normalMapped ? NORMAL_MAPPED_BIT : 0);
-		this.geometry = geometry;
-		this.material = material;
+		this.geometry.add(geometry);
+		materials.add(material);
 	}
 
 	public MeshComponent(Model model, Renderer renderer, boolean normalMapped) {
-		if (model.getSkeleton() != null) {
-			flags = (normalMapped ? NORMAL_MAPPED_BIT : 0) | SKELETAL_BIT;	
-			this.geometry = renderer.createGeometry(convertVertices(model.getVertices(), true), model.getIndices(), 
-					Vertex.POSITION_BIT | Vertex.TEXTURE_COORD_BIT | Vertex.NORMAL_BIT | Vertex.JOINTID_BIT | Vertex.WEIGHT_BIT);
-		} else {
-			flags = (normalMapped ? NORMAL_MAPPED_BIT : 0);			
-			this.geometry = renderer.createGeometry(convertVertices(model.getVertices(), false), model.getIndices(),
-					Vertex.POSITION_BIT | Vertex.TEXTURE_COORD_BIT | Vertex.NORMAL_BIT);
+		ArrayList<Mesh> meshes = model.getMeshes();
+		for (int i = 0; i < meshes.size(); i++) {
+			Mesh mesh = meshes.get(i);
+			if (model.getSkeleton() != null) {
+				flags = (normalMapped ? NORMAL_MAPPED_BIT : 0) | SKELETAL_BIT;	
+				geometry.add(renderer.createGeometry(convertVertices(mesh.getVertices(), true), mesh.getIndices(), 
+						Vertex.POSITION_BIT | Vertex.TEXTURE_COORD_BIT | Vertex.NORMAL_BIT | Vertex.JOINTID_BIT | Vertex.WEIGHT_BIT));
+			} else {
+				flags = (normalMapped ? NORMAL_MAPPED_BIT : 0);			
+				geometry.add(renderer.createGeometry(convertVertices(mesh.getVertices(), false), mesh.getIndices(),
+						Vertex.POSITION_BIT | Vertex.TEXTURE_COORD_BIT | Vertex.NORMAL_BIT));
+			}
+			materials.add(mesh.getMaterial());
 		}
-		this.material = model.getMaterial();
 	}
 
 	public ArrayList<Vertex> convertVertices(ArrayList<library.models.Vertex> oldVertices, boolean skeletal) {
@@ -53,13 +58,13 @@ public class MeshComponent implements Component {
 	public int getFlags() {
 		return flags;
 	}
-
-	public Geometry getGeometry() {
+	
+	public ArrayList<Geometry> getGeometry() {
 		return geometry;
 	}
-
-	public Material getMaterial() {
-		return material;
+	
+	public ArrayList<Material> getMaterials() {
+		return materials;
 	}
 
 	@Override

@@ -17,7 +17,25 @@ public class World {
 	private HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities = new HashMap<>();
 	
 	private ArrayList<Light> lights = new ArrayList<>();
+	
+	private Terrain terrain;
+	
+	private float width, height, resolution;
+	
+	public World(float width, float height, float resolution) {
+		this.width = width;
+		this.height = height;
+		this.resolution = resolution;
+	}
 
+	public void setTerrain(TerrainGenerator generator) {
+		terrain = new Terrain(generator, Math.floorDiv((int) width, (int) resolution),  Math.floorDiv((int) height, (int) resolution), resolution);
+	}
+	
+	public Terrain getTerrain() {
+		return terrain;
+	}
+	
 	public void addLight(Light light) {
 		lights.add(light);
 	}
@@ -45,25 +63,31 @@ public class World {
 	
 	private void addEntity(Entity entity, HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> entities) {
 		MeshComponent meshComponent = entity.getComponent(MeshComponent.class);
-		Geometry geometry = meshComponent.getGeometry();
-		if (entities.containsKey(geometry)) {
-			HashMap<Material, ArrayList<Entity>> nestedEntities = entities.get(geometry);
-			addEntity(entity, meshComponent.getMaterial(), nestedEntities);
-		} else {
-			HashMap<Material, ArrayList<Entity>> nestedEntities = new HashMap<>();
-			addEntity(entity, meshComponent.getMaterial(), nestedEntities);
-			entities.put(geometry, nestedEntities);
+		ArrayList<Geometry> geometryList = meshComponent.getGeometry();
+		for (int i = 0; i < geometryList.size(); i++) {
+			Geometry geometry = geometryList.get(i);
+			if (entities.containsKey(geometry)) {
+				HashMap<Material, ArrayList<Entity>> nestedEntities = entities.get(geometry);
+				addEntity(entity, meshComponent.getMaterials(), nestedEntities);
+			} else {
+				HashMap<Material, ArrayList<Entity>> nestedEntities = new HashMap<>();
+				addEntity(entity, meshComponent.getMaterials(), nestedEntities);
+				entities.put(geometry, nestedEntities);
+			}
 		}
 	}
 	
-	private void addEntity(Entity entity, Material material, HashMap<Material, ArrayList<Entity>> entities) {
-		if (entities.containsKey(material)) {
-			ArrayList<Entity> entityList = entities.get(material);
-			entityList.add(entity);
-		} else {
-			ArrayList<Entity> entityList = new ArrayList<>();
-			entityList.add(entity);
-			entities.put(material, entityList);
+	private void addEntity(Entity entity, ArrayList<Material> materials, HashMap<Material, ArrayList<Entity>> entities) {
+		for (int i = 0; i < materials.size(); i++) {
+			Material material = materials.get(i);
+			if (entities.containsKey(material)) {
+				ArrayList<Entity> entityList = entities.get(material);
+				entityList.add(entity);
+			} else {
+				ArrayList<Entity> entityList = new ArrayList<>();
+				entityList.add(entity);
+				entities.put(material, entityList);
+			}
 		}
 	}
 
@@ -86,17 +110,28 @@ public class World {
 	
 	private boolean removeEntity(Entity entity, HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> entities) {
 		MeshComponent meshComponent = entity.getComponent(MeshComponent.class);
-		if (entities.containsKey(meshComponent.getGeometry())) {
-			HashMap<Material, ArrayList<Entity>> nestedEntities = entities.get(meshComponent.getGeometry());
-			if (nestedEntities.containsKey(meshComponent.getMaterial())) {
-				ArrayList<Entity> entityList = nestedEntities.get(meshComponent.getMaterial());
-				return entityList.remove(entity);
+		ArrayList<Geometry> geometryList = meshComponent.getGeometry();
+		for (int i = 0; i < geometryList.size(); i++) {
+			Geometry geometry = geometryList.get(i);
+			if (entities.containsKey(geometry)) {
+				HashMap<Material, ArrayList<Entity>> nestedEntities = entities.get(geometry);
+				ArrayList<Material> materials = meshComponent.getMaterials();
+				for (int j = 0; j < materials.size(); j++) {
+					Material material = materials.get(j);
+					if (nestedEntities.containsKey(material)) {
+						ArrayList<Entity> entityList = nestedEntities.get(material);
+						if (!entityList.remove(entity)) {
+							return false;
+						}
+					} else {
+						return false;
+					}
+				}
 			} else {
 				return false;
 			}
-		} else {
-			return false;
 		}
+		return true;
 	}
 	
 	public HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> getDefaultEntities() {

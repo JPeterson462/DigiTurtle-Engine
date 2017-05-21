@@ -14,7 +14,10 @@ public class SceneRenderer {
 	
 	private float lightLevel = 0.5f;
 	
+	private Renderer renderer;
+	
 	public SceneRenderer(Renderer renderer, RenderingStrategy strategy, CoreSettings coreSettings, GraphicsSettings graphicsSettings) {
+		this.renderer = renderer;
 		switch (strategy) {
 			case DEFERRED:
 				pipeline = new DeferredRenderingPipeline(renderer, coreSettings, graphicsSettings);
@@ -31,6 +34,7 @@ public class SceneRenderer {
 	}
 	
 	public void render(Camera camera, Vector3f cameraPosition, World world) {
+		// render world.getTerrain()
 		pipeline.doGeometryPass(camera, world.getDefaultEntities(), world.getNormalMappedEntities(),
 				world.getDefaultSkeletalEntities(), world.getNormalMappedSkeletalEntities());
 		pipeline.doLightingPass(lightLevel, camera, world.getLights(), cameraPosition);

@@ -38,6 +38,9 @@ public class Skeleton {
 
 	private void addJointsToArray(Joint headJoint, Matrix4f[] jointMatrices) {
 		jointMatrices[headJoint.index] = headJoint.getAnimatedTransform();
+		if (headJoint.getAnimatedTransform() == null) {
+			jointMatrices[headJoint.index] = new Matrix4f();
+		}
 		for (Joint childJoint : headJoint.children) {
 			addJointsToArray(childJoint, jointMatrices);
 		}

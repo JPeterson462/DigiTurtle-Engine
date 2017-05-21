@@ -2,31 +2,28 @@ package library.models;
 
 import java.util.ArrayList;
 
-import engine.world.Material;
-
 public class Model {
 	
-	private ArrayList<Vertex> vertices;
-	
-	private ArrayList<Integer> indices;
-	
-	private Material material;
+	private ArrayList<Mesh> meshes = new ArrayList<>();
 	
 	private Joint rootJoint;
 	
 	private int jointCount;
 	
-	public Model(ModelVertexQueue queue) {
-		vertices = new ArrayList<>();
-		for (int i = 0; i < queue.getVertices().size(); i++) {
-			vertices.add(queue.transform(queue.getVertices().get(i)));
-		}
-		indices = queue.getIndices();
+	public Model(Mesh mesh) {
+		meshes.add(mesh);
 	}
 	
-	public Model(ArrayList<Vertex> vertices, ArrayList<Integer> indices) {
-		this.vertices = vertices;
-		this.indices = indices;
+	public Model() {
+		
+	}
+	
+	public Model(ArrayList<Mesh> meshes) {
+		this.meshes.addAll(meshes);
+	}
+	
+	public void addMesh(Mesh mesh) {
+		meshes.add(mesh);
 	}
 	
 	public void setSkeleton(Joint rootJoint, int jointCount) {
@@ -38,20 +35,8 @@ public class Model {
 		return rootJoint;
 	}
 	
-	public ArrayList<Vertex> getVertices() {
-		return vertices;
-	}
-	
-	public Material getMaterial() {
-		return material;
-	}
-
-	public void setMaterial(Material material) {
-		this.material = material;
-	}
-
-	public ArrayList<Integer> getIndices() {
-		return indices;
+	public ArrayList<Mesh> getMeshes() {
+		return meshes;
 	}
 
 	public int getJointCount() {

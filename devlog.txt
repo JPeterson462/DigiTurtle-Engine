@@ -34,11 +34,13 @@
 	- Common asset stream interface (needs to be updated when the destination for assets changes)
 	- FXAA (antialiasing) (still somewhat slow and looks bad)
 	- Anisotropic filtering
+5/20/17:
+	- Started MD5 Animation Importer
+	- Reorganized Model class
 
 TODO
 	- Terrain; Multitexturing
 	- Shadows
-	- MD5 importer
 	- OBJ Material Loading?
 	- Music instance that waits for audio rather than ending
 	

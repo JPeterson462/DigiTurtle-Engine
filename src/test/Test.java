@@ -108,15 +108,20 @@ public class Test {
 //			entity.addComponent(mesh);
 //			scene.addEntity(entity);
 			
-			Model model = ModelImporterLibrary.findImporter("dae").importModel(new AssetInputStream("model.dae"), "Armature");
-			model.setMaterial(material);
-			Animation animation = AnimationImporterLibrary.findImporter("dae").importAnimation(new AssetInputStream("model.dae"), "Armature");
+//			Model model = ModelImporterLibrary.findImporter("dae").importModel(new AssetInputStream("model.dae"), "Armature", renderer);
+//			model.getMeshes().get(0).setMaterial(material);
+//			Animation animation = AnimationImporterLibrary.findImporter("dae").importAnimation(new AssetInputStream("model.dae"), "Armature");
+			
+			Model model = ModelImporterLibrary.findImporter("md5mesh").importModel(new AssetInputStream("md5/bob_lamp_update_export.md5mesh"), null, renderer);
+//			model.getMeshes().get(0).setMaterial(material);
+			Animation animation = AnimationImporterLibrary.findImporter("md5anim").importAnimation(new AssetInputStream("md5/bob_lamp_update_export.md5anim"), null);
+			
 			entity.addComponent(new MeshComponent(model, renderer, false));
 			entity.addComponent(new SkeletonComponent(model));
 			entity.addComponent(new AnimationComponent());
-			entity.getComponent(AnimationComponent.class).doAnimation(animation);
+			//entity.getComponent(AnimationComponent.class).doAnimation(animation);
 			
-			world = new World();
+			world = new World(0, 0, 0);
 			
 			world.addEntity(entity);
 			

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import org.joml.Vector2f;
 
+import engine.rendering.Renderer;
 import library.models.collada.ColladaJoint;
 import library.models.collada.ColladaModel;
 import library.models.collada.ColladaSkinning;
@@ -27,7 +28,7 @@ public class ColladaModelImporter implements ModelImporter {
 	}
 
 	@Override
-	public Model importModel(InputStream stream, String animation) {
+	public Model importModel(InputStream stream, String animation, Renderer renderer) {
 		XMLNode node = XMLParser.loadXmlFile(stream);
 		SkinLoader skinLoader = new SkinLoader(node.getChild("library_controllers"), MAX_WEIGHTS);
 		ColladaSkinning skinningData = skinLoader.extractSkinData();
@@ -43,7 +44,7 @@ public class ColladaModelImporter implements ModelImporter {
 		}
 		ArrayList<Integer> indices = new ArrayList<>();
 		indices.addAll(model.getIndices());
-		Model standardModel = new Model(vertices, indices);
+		Model standardModel = new Model(new Mesh(vertices, indices));
 		Joint rootJoint = convertJoint(model.getRootJoint());
 		standardModel.setSkeleton(rootJoint, model.getJointCount());
 		return standardModel;

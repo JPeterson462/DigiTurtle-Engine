@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.esotericsoftware.minlog.Log;
 
+import engine.rendering.Renderer;
+
 public class OBJModelImporter implements ModelImporter {
 
 	private String[] EXTENSIONS = { "obj" };
@@ -18,7 +20,7 @@ public class OBJModelImporter implements ModelImporter {
 	}
 
 	@Override
-	public Model importModel(InputStream stream, String animation) {
+	public Model importModel(InputStream stream, String animation, Renderer renderer) {
 		if (animation != null) {
 			Log.warn("OBJ Importer ignoring animation '" + animation + "'");
 		}
@@ -60,7 +62,7 @@ public class OBJModelImporter implements ModelImporter {
 			Log.error("Failed to import OBJ file. " + stream, e);
 			return null;
 		}
-		return new Model(queue);
+		return new Model(new Mesh(queue));
 	}
 	
 	private float[] parseFloatData(String[] parts, int offset) {

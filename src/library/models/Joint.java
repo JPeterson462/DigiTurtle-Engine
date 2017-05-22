@@ -14,10 +14,23 @@ public class Joint {
 	
 	private final ArrayList<Joint> children = new ArrayList<>();
 
+	private Matrix4f localBindTransform, inverseBindTransform, bindTransform;
+
 	public Joint(int index, String name, Matrix4f bindLocalTransform) {
 		this.index = index;
 		this.name = name;
 		this.bindLocalTransform = bindLocalTransform;
+		localBindTransform = new Matrix4f();
+		inverseBindTransform = new Matrix4f();
+		bindTransform = new Matrix4f();
+	}
+
+	protected void calcInverseBindTransform(Matrix4f parentBindTransform) {
+		parentBindTransform.mul(localBindTransform, bindTransform);
+		bindTransform.invert(inverseBindTransform);
+		for (Joint child : children) {
+			child.calcInverseBindTransform(bindTransform);
+		}
 	}
 
 	public int getIndex() {
@@ -38,6 +51,10 @@ public class Joint {
 	
 	public void addChild(Joint joint) {
 		children.add(joint);
+	}
+
+	public Matrix4f getBindTransform() {
+		return bindTransform;
 	}
 	
 }

@@ -44,8 +44,7 @@ TODO
 	- OBJ Material Loading?
 	- Music instance that waits for audio rather than ending
 	
-	- Distance field font rendering
-		- Small fonts
+	- Distance field font rendering: Small fonts
 	- Percentage closer filtering
 	
 	- Instanced Geometry

@@ -66,6 +66,7 @@ public class MD5AnimationImporter implements AnimationImporter {
 					}
 					else if (line.startsWith("frame")) {
 						frame.set(Integer.parseInt(parts[1]));
+						frameData.clear();
 						section.set(FRAME_SECTION);
 					}
 				}
@@ -133,7 +134,7 @@ public class MD5AnimationImporter implements AnimationImporter {
 								offset++;
 							}
 							transforms.put(joint.name, new Matrix4f().translationRotate(position.x, position.y, position.z, 
-									new Quaternionf(orientation.x, orientation.y, orientation.z)));
+									computeQuatW(new Quaternionf(orientation.x, orientation.y, orientation.z))));
 						}
 						keyframeData.add(new KeyFrameData(keyframeData.size() * delta.get(), transforms));
 						section.set(DEFAULT_SECTION);
@@ -150,6 +151,16 @@ public class MD5AnimationImporter implements AnimationImporter {
 			return null;
 		}
 		return new Animation(keyframeData.size() * delta.get(), keyframeData.toArray(new KeyFrameData[0]));
+	}
+
+	private Quaternionf computeQuatW(Quaternionf quaternion) {
+		float t = 1.0f - quaternion.x * quaternion.x - quaternion.y * quaternion.y - quaternion.z * quaternion.z;
+		if (t < 0f) {
+			quaternion.w = 0;
+		} else {
+			quaternion.w = (float) -Math.sqrt(t);
+		}
+		return quaternion;
 	}
 	
 	private float[] toFloats(String[] parts) {

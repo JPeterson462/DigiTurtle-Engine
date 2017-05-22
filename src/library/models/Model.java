@@ -2,6 +2,8 @@ package library.models;
 
 import java.util.ArrayList;
 
+import org.joml.Matrix4f;
+
 public class Model {
 	
 	private ArrayList<Mesh> meshes = new ArrayList<>();
@@ -29,6 +31,7 @@ public class Model {
 	public void setSkeleton(Joint rootJoint, int jointCount) {
 		this.rootJoint = rootJoint;
 		this.jointCount = jointCount;
+		rootJoint.calcInverseBindTransform(new Matrix4f());
 	}
 	
 	public Joint getSkeleton() {

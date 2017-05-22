@@ -92,7 +92,7 @@ public class MD5ModelImporter implements ModelImporter {
 								MD5Weight weight = md5WeightsPointer.get()[md5Vertex.startWeight + j];
 								Joint joint = joints.get(weight.jointIndex);
 								Vector4f rotatedPos = new Vector4f(weight.position, 1.0f);
-								joint.getBindLocalTransform().transform(rotatedPos);
+								joint.getBindTransform().transform(rotatedPos);
 								positions[j] = new Vector3f(rotatedPos.x, rotatedPos.y, rotatedPos.z);
 								if (j == 0) {
 									jointIndices.x = md5Vertex.startWeight + j;
@@ -183,6 +183,7 @@ public class MD5ModelImporter implements ModelImporter {
 						int parentIndex = Integer.parseInt(parts[1]);
 						Vector3f position = new Vector3f(Float.parseFloat(parts[3]), Float.parseFloat(parts[4]), Float.parseFloat(parts[5]));
 						Quaternionf orientation = new Quaternionf(Float.parseFloat(parts[8]), Float.parseFloat(parts[9]), Float.parseFloat(parts[10]));
+						computeQuatW(orientation);
 						Matrix4f transform = new Matrix4f().translationRotate(position.x, position.y, position.z, orientation);
 						Joint joint = new Joint(joints.size(), unquote(parts[0]), transform);
 						joints.add(joint);
@@ -199,6 +200,15 @@ public class MD5ModelImporter implements ModelImporter {
 		} catch (IOException e) {
 			Log.error("Failed to import MD5 file. " + stream, e);
 			return null;
+		}
+	}
+	
+	private void computeQuatW(Quaternionf quaternion) {
+		float t = 1.0f - quaternion.x * quaternion.x - quaternion.y * quaternion.y - quaternion.z * quaternion.z;
+		if (t < 0f) {
+			quaternion.w = 0;
+		} else {
+			quaternion.w = (float) -Math.sqrt(t);
 		}
 	}
 	

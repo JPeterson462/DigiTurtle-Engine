@@ -1,7 +1,10 @@
-package library.models;
+package library.models.importers;
 
 import java.io.InputStream;
 
+import library.models.Animation;
+import library.models.AnimationImporter;
+import library.models.KeyFrameData;
 import library.models.collada.AnimationLoader;
 import library.models.collada.ColladaAnimation;
 import library.models.collada.ColladaKeyFrameData;

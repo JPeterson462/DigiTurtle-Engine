@@ -17,6 +17,11 @@ public class AnimationImporterLibrary {
 				return importer.getValue();
 			}
 		}
+		for (Map.Entry<String[], AnimationImporter> importer : importers.entrySet()) {
+			if (importer.getKey().length == 0) {
+				return importer.getValue();
+			}
+		}
 		return null;
 	}
 	

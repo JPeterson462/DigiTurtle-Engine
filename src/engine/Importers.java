@@ -5,12 +5,12 @@ import library.audio.VorbisDecoder;
 import library.font.AngelcodeFontImporter;
 import library.font.FontImporterLibrary;
 import library.models.AnimationImporterLibrary;
-import library.models.ColladaAnimationImporter;
-import library.models.ColladaModelImporter;
-import library.models.MD5AnimationImporter;
-import library.models.MD5ModelImporter;
 import library.models.ModelImporterLibrary;
-import library.models.OBJModelImporter;
+import library.models.importers.ColladaAnimationImporter;
+import library.models.importers.ColladaModelImporter;
+import library.models.importers.MD5AnimationImporter;
+import library.models.importers.MD5ModelImporter;
+import library.models.importers.OBJModelImporter;
 
 public class Importers {
 	

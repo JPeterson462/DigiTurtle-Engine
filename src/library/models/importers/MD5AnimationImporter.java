@@ -1,4 +1,4 @@
-package library.models;
+package library.models.importers;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,6 +14,9 @@ import org.joml.Vector3f;
 
 import com.esotericsoftware.minlog.Log;
 
+import library.models.Animation;
+import library.models.AnimationImporter;
+import library.models.KeyFrameData;
 import utils.AtomicObject;
 
 public class MD5AnimationImporter implements AnimationImporter {

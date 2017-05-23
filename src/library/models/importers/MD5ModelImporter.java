@@ -1,4 +1,4 @@
-package library.models;
+package library.models.importers;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,6 +19,11 @@ import com.esotericsoftware.minlog.Log;
 import engine.AssetInputStream;
 import engine.rendering.Renderer;
 import engine.world.Material;
+import library.models.Joint;
+import library.models.Mesh;
+import library.models.Model;
+import library.models.ModelImporter;
+import library.models.Vertex;
 import utils.AtomicObject;
 
 public class MD5ModelImporter implements ModelImporter {

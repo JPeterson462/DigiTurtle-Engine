@@ -16,6 +16,10 @@ public class AssetInputStream extends InputStream implements RelativeStreamGener
 		source = connectToSource(path);
 	}
 	
+	public String getPath() {
+		return path;
+	}
+	
 	private InputStream connectToSource(String path) {
 		return getClass().getClassLoader().getResourceAsStream("test/" + path);
 	}

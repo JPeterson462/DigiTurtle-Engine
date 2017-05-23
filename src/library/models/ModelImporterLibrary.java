@@ -17,6 +17,11 @@ public class ModelImporterLibrary {
 				return importer.getValue();
 			}
 		}
+		for (Map.Entry<String[], ModelImporter> importer : importers.entrySet()) {
+			if (importer.getKey().length == 0) {
+				return importer.getValue();
+			}
+		}
 		return null;
 	}
 	

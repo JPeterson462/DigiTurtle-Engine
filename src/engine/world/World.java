@@ -28,8 +28,8 @@ public class World {
 		this.resolution = resolution;
 	}
 
-	public void setTerrain(TerrainGenerator generator) {
-		terrain = new Terrain(generator, Math.floorDiv((int) width, (int) resolution),  Math.floorDiv((int) height, (int) resolution), resolution);
+	public void setTerrain(TerrainGenerator generator, float x, float z) {
+		terrain = new Terrain(generator, Math.floorDiv((int) width, (int) resolution),  Math.floorDiv((int) height, (int) resolution), resolution, x, z);
 	}
 	
 	public Terrain getTerrain() {

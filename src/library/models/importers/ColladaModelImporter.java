@@ -1,4 +1,4 @@
-package library.models;
+package library.models.importers;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -6,6 +6,11 @@ import java.util.ArrayList;
 import org.joml.Vector2f;
 
 import engine.rendering.Renderer;
+import library.models.Joint;
+import library.models.Mesh;
+import library.models.Model;
+import library.models.ModelImporter;
+import library.models.Vertex;
 import library.models.collada.ColladaJoint;
 import library.models.collada.ColladaModel;
 import library.models.collada.ColladaSkinning;

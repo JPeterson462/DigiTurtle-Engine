@@ -37,6 +37,43 @@
 5/20/17:
 	- Started MD5 Animation Importer
 	- Reorganized Model class
+5/23/17:
+	- Started Assimp importer
+	
+TIMELINE
+	1. Terrain
+		- Rendering
+		- Optimization
+		- Multitexturing
+	2. Post Processing Depth of Field
+	3. Shadows
+		- Percentage Closer Filtering
+	4. Instanced Geometry
+		- Particle Effects
+	5. Window Icons
+	6. Lighting
+		- Fix Cone Light Range
+		- Project Lighting (i.e. Position) with View Matrix
+	7. Decal and Transparency Passes
+	8. Input Processing and First Person Movement
+	9. Skybox
+	10. God Rays
+	11. Order Independent Transparency
+	12. Mouse Picking
+	13. Water Rendering
+	14. Post Processing Effects
+	15. Fix Assimp Importer
+	16. Fix MD5 Importer
+	17. Physics Engine
+		- Terrain, Navigation Mesh
+		- Collision
+		- Optimization
+	18. Networking
+		- NIO
+		- Encoding/Decoding Traffic
+	19. User Interface
+	20. Input Processing
+	21. Photo-realistic Rendering
 
 TODO
 	- Terrain; Multitexturing

@@ -1,4 +1,4 @@
-package library.models;
+package library.models.importers;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -9,6 +9,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.esotericsoftware.minlog.Log;
 
 import engine.rendering.Renderer;
+import library.models.Mesh;
+import library.models.Model;
+import library.models.ModelImporter;
+import library.models.ModelVertexQueue;
 
 public class OBJModelImporter implements ModelImporter {
 

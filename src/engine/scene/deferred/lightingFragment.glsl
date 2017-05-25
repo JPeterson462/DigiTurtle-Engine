@@ -86,6 +86,12 @@ vec4 lightComputeDir(vec3 worldPos, vec4 color, vec4 position, vec4 spotDir) {
 	return lightDir;
 }
 
+float computeOcclusion(vec3 worldPos, vec3 lightPos, vec3 cameraPos) {
+	float distanceToLight = length(lightPos - cameraPos);
+	float distanceToFragment = length(worldPos - cameraPos);
+	return distanceToLight <= distanceToFragment ? 1.0 : 0.0;
+}
+
 void main(void) {
 	vec4 diffuseColor = texture2D(diffuseTexture, pass_TextureCoord);
 	if (diffuseColor.a == 0.0) {
@@ -107,5 +113,5 @@ void main(void) {
 
 	vec4 color = vec4(light.x * diffuseColor.xyz + light.y * vec3(1.0), 1.0);
 	//out_Color = vec4(pow(color, gammaExponent), 1.0);
-	out_Color = pow(color, gammaExponent) * vec4(lightColor, 1.0);
+	out_Color = pow(color, gammaExponent) * vec4(lightColor, 1.0) * computeOcclusion(position, lightPos.xyz, viewPos);
 }

@@ -1,6 +1,7 @@
 package engine.rendering.opengl;
 
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -8,11 +9,14 @@ import org.joml.Vector2i;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.stb.STBImage;
 
 import com.esotericsoftware.minlog.Log;
 
+import engine.AssetInputStream;
 import engine.CoreSettings;
 import engine.GraphicsSettings;
+import engine.IOUtils;
 import engine.rendering.Framebuffer;
 import engine.rendering.FreeFunction;
 import engine.rendering.Geometry;
@@ -20,6 +24,7 @@ import engine.rendering.Renderer;
 import engine.rendering.Shader;
 import engine.rendering.Texture;
 import engine.rendering.Vertex;
+import library.glfw.GLFWIcon;
 import library.glfw.GLFWMonitor;
 import library.glfw.GLFWWindow;
 
@@ -53,6 +58,7 @@ public class GLRenderer implements Renderer {
 			width = coreSettings.width;
 			height = coreSettings.height;
 		}
+		window.setIcon(getIcons(coreSettings.windowIconPaths));
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -67,6 +73,18 @@ public class GLRenderer implements Renderer {
 		frames = 0;
 		fps = 0;
 		window.showWindow();
+	}
+	
+	private GLFWIcon[] getIcons(String[] paths) {
+		GLFWIcon[] icons = new GLFWIcon[paths.length];
+		for (int i = 0; i < icons.length; i++) {
+			icons[i] = new GLFWIcon();
+			ByteBuffer data = IOUtils.readBufferQuietly(new AssetInputStream(paths[i]));
+			int[] width = {0}, height = {0}, components = {0};
+			ByteBuffer pixels = STBImage.stbi_load_from_memory(data, width, height, components, 0);
+			icons[i].image(pixels, width[0], height[0]);
+		}
+		return icons;
 	}
 
 	@Override

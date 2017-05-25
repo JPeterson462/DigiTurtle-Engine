@@ -14,6 +14,8 @@ public class CoreSettings {
 	
 	public boolean showFPS;
 	
+	public String[] windowIconPaths;
+	
 	public CoreSettings() {
 		fullscreen = false;
 		title = "Application";
@@ -21,6 +23,9 @@ public class CoreSettings {
 		height = 720;
 		backgroundColor = new Vector3f(0, 0, 0);
 		showFPS = true;
+		windowIconPaths = new String[] {
+			"crate.png"
+		};
 	}
 	
 }

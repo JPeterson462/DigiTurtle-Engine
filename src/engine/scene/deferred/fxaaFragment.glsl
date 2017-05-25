@@ -13,7 +13,7 @@ in vec2 pass_TextureCoord;
 
 out vec4 out_Color;
 
-void main(void) {
+void main(void) {/*
 	vec2 inverse_resolution=vec2(1.0/resolution.x,1.0/resolution.y);
 	vec3 rgbNW = texture2D(diffuseTexture, pass_TextureCoord + vec2(-FXAA_RESOLUTION,-FXAA_RESOLUTION) * inverse_resolution).xyz;
 	vec3 rgbNE = texture2D(diffuseTexture, pass_TextureCoord + vec2(FXAA_RESOLUTION,-FXAA_RESOLUTION) * inverse_resolution).xyz;
@@ -40,6 +40,8 @@ void main(void) {
 	if((lumaB < lumaMin) || (lumaB > lumaMax)) {
 		out_Color = vec4(rgbA,1.0);
 	} else {
-	out_Color = vec4(rgbB,1.0);
+		out_Color = vec4(rgbB,1.0);
 	}
+*/
+	out_Color = texture2D(diffuseTexture, pass_TextureCoord);	
 }

@@ -88,6 +88,13 @@ public class Terrain {
 		return geometry;
 	}
 	
+	public Geometry getGeometry(Renderer renderer) {
+		if (geometry == null) {
+			create(renderer);
+		}
+		return getGeometry();
+	}
+	
 	public float getHeightAt(float x, float z) {
 		return generator.getHeightAt(x, z);
 	}

@@ -29,6 +29,7 @@ import engine.text.opengl.GLTextRenderer;
 import engine.world.AmbientLight;
 import engine.world.Entity;
 import engine.world.Material;
+import engine.world.PointLight;
 import engine.world.SpotLight;
 import engine.world.World;
 import library.audio.AudioData;
@@ -121,14 +122,14 @@ public class Test {
 			entity.addComponent(new AnimationComponent());
 			entity.getComponent(AnimationComponent.class).doAnimation(animation);
 			
-			world = new World(0, 0, 0);
+			world = new World(500, 500, 5);
 			
 			world.addEntity(entity);
 			
 			world.addLight(new AmbientLight(1, 1, 1));
 //			PointLight pointLight = new PointLight(0, 0, 1);
 //			pointLight.setRange(20);
-//			pointLight.setPosition(0, 25, 4);
+//			pointLight.setPosition(0, 25, 5);
 //			world.addLight(pointLight);
 //			DirectionalLight directionalLight = new DirectionalLight(1, 1, 0);
 //			directionalLight.setDirection(-1, -1, -1);
@@ -138,8 +139,10 @@ public class Test {
 			spotLight.setPosition(0, 25, 25);
 			spotLight.setAngle((float) Math.PI / 180f);
 			spotLight.setDirection(0, 1, 0);
-			world.addLight(spotLight);
-			scene.setLightLevel(0f);
+//			world.addLight(spotLight);
+			scene.setLightLevel(0.6f);
+			
+			world.setTerrain((x, z) -> 0, 0, 0);
 			
 			soundSystem = new ALSoundSystem();
 			soundSystem.createContext();
@@ -163,7 +166,7 @@ public class Test {
 //			entity.setOrientation(new Quaternionf().rotationY((float) Math.toRadians(t)));
 			
 			Vector3f v = new Vector3f(10 * (float) Math.cos(Math.toRadians(t)), 0, 10 * (float) Math.sin(Math.toRadians(t)));
-			spotLight.setDirection(v);
+//			spotLight.setDirection(v);
 			
 			float height = 25;
 			cameraPosition.set(0, height, dist);

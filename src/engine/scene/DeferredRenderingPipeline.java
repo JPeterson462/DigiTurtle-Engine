@@ -26,11 +26,12 @@ import engine.world.Light;
 import engine.world.Material;
 import engine.world.PointLight;
 import engine.world.SpotLight;
+import engine.world.Terrain;
 
 public class DeferredRenderingPipeline implements RenderingPipeline {
 	
 	private Shader defaultGeometryShader, normalMappedGeometryShader, defaultSkeletalGeometryShader, 
-		normalMappedSkeletalGeometryShader, pointLightShader, ambientLightShader, fxaaShader;
+		normalMappedSkeletalGeometryShader, pointLightShader, ambientLightShader, fxaaShader, terrainShader;
 	
 	private Framebuffer geometryPass, lightingPass;
 	
@@ -52,6 +53,8 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		pointLightShader_invViewMatrix, pointLightShader_invProjectionMatrix,
 		pointLightShader_near, pointLightShader_far;
 	private int ambientLightShader_viewMatrix, ambientLightShader_projectionMatrix;
+	private int terrainShader_viewMatrix, terrainShader_modelMatrix,
+		terrainShader_projectionMatrix;
 	
 	private Renderer renderer;
 	
@@ -141,6 +144,17 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		fxaaShader.uploadInteger(fxaaShader.getUniformLocation("diffuseTexture"), 0);
 		fxaaShader.uploadVector(fxaaShader.getUniformLocation("resolution"), new Vector2f(coreSettings.width, coreSettings.height));
 		fxaaShader.unbind();
+		// Terrain Shader
+		attributes = new HashMap<>();
+		attributes.put(0, "in_Position");
+		attributes.put(1, "in_TextureCoord");
+		attributes.put(2, "in_Normal");
+		terrainShader = renderer.createShader(getShader("defaultVertex"), getShader("terrainFragment"), attributes);
+		terrainShader.bind();
+		terrainShader_viewMatrix = terrainShader.getUniformLocation("viewMatrix");
+		terrainShader_modelMatrix = terrainShader.getUniformLocation("modelMatrix");
+		terrainShader_projectionMatrix = terrainShader.getUniformLocation("projectionMatrix");
+		terrainShader.unbind();
 		// Fullscreen Pass
 		lightingFullscreenPass = createFullscreenQuad(renderer);
 		postProcessingPass = createPostProcessingPass(renderer);
@@ -186,9 +200,10 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	public void doGeometryPass(Camera camera, HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> defaultEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> defaultSkeletalEntities,
-			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities) {
+			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities, Terrain terrain) {
 		Matrix4f modelMatrix = new Matrix4f();
 		geometryPass.bind();
+		renderTerrain(modelMatrix, terrainShader, camera, terrain, terrainShader_projectionMatrix, terrainShader_viewMatrix, terrainShader_modelMatrix);
 		renderGeometry(modelMatrix, defaultGeometryShader, camera, defaultEntities, false, false,
 				defaultGeometryShader_projectionMatrix, defaultGeometryShader_viewMatrix, defaultGeometryShader_modelMatrix);
 		renderGeometry(modelMatrix, normalMappedGeometryShader, camera, normalMappedEntities, true, false, 
@@ -198,6 +213,18 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		renderGeometry(modelMatrix, normalMappedSkeletalGeometryShader, camera, normalMappedSkeletalEntities, true, true,
 				normalMappedSkeletalGeometryShader_projectionMatrix, normalMappedSkeletalGeometryShader_viewMatrix, normalMappedSkeletalGeometryShader_modelMatrix);
 		geometryPass.unbind();
+	}
+	
+	private void renderTerrain(Matrix4f modelMatrix, Shader shader, Camera camera, Terrain terrain, int projectionMatrixLocation,
+			int viewMatrixLocation, int modelMatrixLocation) {
+		shader.bind();
+		shader.uploadMatrix(projectionMatrixLocation, camera.getProjectionMatrix());
+		shader.uploadMatrix(viewMatrixLocation, camera.getViewMatrix());
+		Geometry geometry = terrain.getGeometry(renderer);
+		geometry.bind();
+		geometry.render();
+		geometry.unbind();
+		shader.unbind();
 	}
 	
 	private void renderGeometry(Matrix4f modelMatrix, Shader shader, Camera camera, 

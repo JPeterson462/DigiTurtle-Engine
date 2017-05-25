@@ -39,18 +39,24 @@
 	- Reorganized Model class
 5/23/17:
 	- Started Assimp importer
+5/24/17:
+	- Added window icons
+	- Started input processing
+	- Started terrain rendering (doesn't work yet)
 	
 TIMELINE
 	1. Terrain
 		- Rendering
 		- Optimization
 		- Multitexturing
-	2. Post Processing Depth of Field
+	2. Post Processing
+		- Depth of Field
+		- Fix FXAA (Faster and better)
 	3. Shadows
 		- Percentage Closer Filtering
 	4. Instanced Geometry
 		- Particle Effects
-	5. Window Icons
+*	5. Window Icons
 	6. Lighting
 		- Fix Cone Light Range
 		- Project Lighting (i.e. Position) with View Matrix

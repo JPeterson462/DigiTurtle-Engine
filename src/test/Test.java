@@ -122,15 +122,15 @@ public class Test {
 			entity.addComponent(new AnimationComponent());
 			entity.getComponent(AnimationComponent.class).doAnimation(animation);
 			
-			world = new World(500, 500, 5);
+			world = new World(500, 500, 5, 2, 2);
 			
 			world.addEntity(entity);
 			
 			world.addLight(new AmbientLight(1, 1, 1));
-//			PointLight pointLight = new PointLight(0, 0, 1);
-//			pointLight.setRange(20);
-//			pointLight.setPosition(0, 25, 5);
-//			world.addLight(pointLight);
+			PointLight pointLight = new PointLight(0, 0, 1);
+			pointLight.setRange(20);
+			pointLight.setPosition(50, 0, 50);
+			world.addLight(pointLight);
 //			DirectionalLight directionalLight = new DirectionalLight(1, 1, 0);
 //			directionalLight.setDirection(-1, -1, -1);
 //			world.addLight(directionalLight);
@@ -139,10 +139,13 @@ public class Test {
 			spotLight.setPosition(0, 25, 25);
 			spotLight.setAngle((float) Math.PI / 180f);
 			spotLight.setDirection(0, 1, 0);
-//			world.addLight(spotLight);
-			scene.setLightLevel(0.6f);
+			world.addLight(spotLight);
+			scene.setLightLevel(0.3f);
 			
-			world.setTerrain((x, z) -> 0, 0, 0);
+			world.setTerrain(0, 0, (x, z) -> 0);
+			world.setTerrain(1, 0, (x, z) -> 0);
+			world.setTerrain(0, 1, (x, z) -> 0);
+			world.setTerrain(1, 1, (x, z) -> 0);
 			
 			soundSystem = new ALSoundSystem();
 			soundSystem.createContext();
@@ -157,7 +160,7 @@ public class Test {
 			float dt = renderer.getDeltaTime();
 			renderer.prepareContext();
 			
-			t += 180 * dt;
+			t += 90 * dt;
 			float dist = 50;
 			
 			entity.setScale(new Vector3f(5));
@@ -169,8 +172,8 @@ public class Test {
 //			spotLight.setDirection(v);
 			
 			float height = 25;
-			cameraPosition.set(0, height, dist);
-//			cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)) + 5, dist, dist * (float) Math.sin(Math.toRadians(t)) + 5);
+//			cameraPosition.set(0, height, dist);
+			cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)) + 5, dist, dist * (float) Math.sin(Math.toRadians(t)) + 5);
 			camera.getViewMatrix().setLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0, height, 0, 0, 1, 0);
 			
 			entity.update(dt);

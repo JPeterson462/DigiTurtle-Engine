@@ -87,9 +87,10 @@ vec4 lightComputeDir(vec3 worldPos, vec4 color, vec4 position, vec4 spotDir) {
 }
 
 float computeOcclusion(vec3 worldPos, vec3 lightPos, vec3 cameraPos) {
-	float distanceToLight = length(lightPos - cameraPos);
-	float distanceToFragment = length(worldPos - cameraPos);
-	return distanceToLight <= distanceToFragment ? 1.0 : 0.0;
+	//float distanceToLight = length(lightPos - cameraPos);
+	//float distanceToFragment = length(worldPos - cameraPos);
+	//return distanceToLight <= distanceToFragment ? 1.0 : 0.0;
+	return 1.0;
 }
 
 void main(void) {

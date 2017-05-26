@@ -2,10 +2,13 @@ package library.glfw.input;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.joml.Vector2d;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWDropCallback;
+
+import utils.Pair;
 
 public class Input {
 	
@@ -19,9 +22,9 @@ public class Input {
 	
 	private Vector2d cursorPosition = new Vector2d();
 	
-	private int windowPosCounter;
+	private HashMap<MouseButton, Boolean> buttonStates = new HashMap<>();
 	
-	//Drag, Click, Joystick Input
+	private int windowPosCounter;
 	
 	public Input(long window) {
 		GLFW.glfwSetCharModsCallback(window, (w, letter, mods) -> {
@@ -39,6 +42,7 @@ public class Input {
 			windowPosCounter = entered ? 0 : -Integer.MAX_VALUE);
 		GLFW.glfwSetCursorPosCallback(window, (w, x, y) -> {
 			if (w == window) {
+				double dx = x - cursorPosition.x, dy = y - cursorPosition.y;
 				cursorPosition.set(x, y);
 				if (windowPosCounter > 0) {
 					ArrayList<MouseListener> listeners = mouseListeners.get(MouseEvent.CURSOR_TRAVEL);
@@ -47,11 +51,20 @@ public class Input {
 							listeners.get(i).onEvent(MouseEvent.CURSOR_TRAVEL, new Vector2d(x, y), modifiers);
 						}
 					}
+					listeners = mouseListeners.get(MouseEvent.DRAG);
+					if (listeners != null) {
+						for (int i = 0; i < listeners.size(); i++) {
+							for (Map.Entry<MouseButton, Boolean> buttonState : buttonStates.entrySet()) {
+								if (buttonState.getValue()) {
+									listeners.get(i).onEvent(MouseEvent.DRAG, new Pair<Vector2d, MouseButton>(new Vector2d(dx, dy), buttonState.getKey()), modifiers);
+								}
+							}
+						}
+					}
 				}
 				windowPosCounter++;
 			}
 		});
-		// CursorPosCallback
 		GLFW.glfwSetDropCallback(window, (w, count, namePointers) -> {
 			if (w == window) {
 				String[] names = new String[count];
@@ -61,7 +74,6 @@ public class Input {
 				filesListener.onDropFiles(names);
 			}
 		});
-		// JoystickCallback
 		GLFW.glfwSetKeyCallback(window, (w, keyId, scancode, action, mods) -> {
 			if (w == window) {
 				Key key = new Key(keyId);
@@ -86,7 +98,31 @@ public class Input {
 				}
 			}
 		});
-		// MouseButtonCallback
+		GLFW.glfwSetMouseButtonCallback(window, (w, button, action, mods) -> {
+			if (w == window) {
+				MouseButton mouseButton = new MouseButton(button);
+				modifiers = new Modifiers(mods);
+				ArrayList<MouseListener> listeners = mouseListeners.get(MouseEvent.CLICK);
+				if (listeners != null && action == GLFW.GLFW_RELEASE) {
+					for (int i = 0; i < listeners.size(); i++) {
+						listeners.get(i).onEvent(MouseEvent.CLICK, new Pair<Vector2d, MouseButton>(new Vector2d(cursorPosition), mouseButton), modifiers);
+					}
+				}
+				listeners = mouseListeners.get(MouseEvent.MOUSE_DOWN);
+				if (listeners != null && action == GLFW.GLFW_PRESS) {
+					for (int i = 0; i < listeners.size(); i++) {
+						listeners.get(i).onEvent(MouseEvent.MOUSE_DOWN, mouseButton, modifiers);
+					}
+				}
+				listeners = mouseListeners.get(MouseEvent.MOUSE_UP);
+				if (listeners != null && action == GLFW.GLFW_RELEASE) {
+					for (int i = 0; i < listeners.size(); i++) {
+						listeners.get(i).onEvent(MouseEvent.MOUSE_UP, mouseButton, modifiers);
+					}
+				}
+				buttonStates.put(mouseButton, action != GLFW.GLFW_RELEASE);
+			}
+		});
 		GLFW.glfwSetScrollCallback(window, (w, dx, dy) -> {
 			if (w == window) {
 				ArrayList<MouseListener> listeners = mouseListeners.get(MouseEvent.SCROLL);

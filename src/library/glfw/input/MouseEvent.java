@@ -14,6 +14,34 @@ public enum MouseEvent {
 	 * <br>
 	 * Cursor Position
 	 */
-	CURSOR_TRAVEL;
+	CURSOR_TRAVEL,
+	
+	/**
+	 * object = Pair<Vector2d, MouseButton>
+	 * <br>
+	 * Cursor Position, Mouse Button
+	 */
+	CLICK,
+	
+	/**
+	 * object = MouseButton
+	 * <br>
+	 * Mouse Button
+	 */
+	MOUSE_UP,
+	
+	/**
+	 * object = MouseButton
+	 * <br>
+	 * Mouse Button
+	 */
+	MOUSE_DOWN,
+	
+	/**
+	 * object = Pair<Vector2d, MouseButton>
+	 * <br>
+	 * Cursor Delta, Mouse Button
+	 */
+	DRAG;
 
 }

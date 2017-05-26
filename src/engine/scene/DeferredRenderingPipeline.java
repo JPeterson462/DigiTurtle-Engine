@@ -26,7 +26,7 @@ import engine.world.Light;
 import engine.world.Material;
 import engine.world.PointLight;
 import engine.world.SpotLight;
-import engine.world.Terrain;
+import engine.world.TerrainChunk;
 
 public class DeferredRenderingPipeline implements RenderingPipeline {
 	
@@ -200,7 +200,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	public void doGeometryPass(Camera camera, HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> defaultEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> defaultSkeletalEntities,
-			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities, Terrain terrain) {
+			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities, TerrainChunk[][] terrain) {
 		Matrix4f modelMatrix = new Matrix4f();
 		geometryPass.bind();
 		renderTerrain(modelMatrix, terrainShader, camera, terrain, terrainShader_projectionMatrix, terrainShader_viewMatrix, terrainShader_modelMatrix);
@@ -215,15 +215,21 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		geometryPass.unbind();
 	}
 	
-	private void renderTerrain(Matrix4f modelMatrix, Shader shader, Camera camera, Terrain terrain, int projectionMatrixLocation,
+	private void renderTerrain(Matrix4f modelMatrix, Shader shader, Camera camera, TerrainChunk[][] terrain, int projectionMatrixLocation,
 			int viewMatrixLocation, int modelMatrixLocation) {
 		shader.bind();
 		shader.uploadMatrix(projectionMatrixLocation, camera.getProjectionMatrix());
 		shader.uploadMatrix(viewMatrixLocation, camera.getViewMatrix());
-		Geometry geometry = terrain.getGeometry(renderer);
-		geometry.bind();
-		geometry.render();
-		geometry.unbind();
+		shader.uploadMatrix(modelMatrixLocation, modelMatrix.identity());
+		for (int i = 0; i < terrain.length; i++) {
+			for (int j = 0; j < terrain[0].length; j++) {
+				TerrainChunk chunk = terrain[i][j];
+				Geometry geometry = chunk.getGeometry(renderer);
+				geometry.bind();
+				geometry.render();
+				geometry.unbind();
+			}
+		}
 		shader.unbind();
 	}
 	

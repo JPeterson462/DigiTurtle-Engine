@@ -43,12 +43,15 @@
 	- Added window icons
 	- Started input processing
 	- Started terrain rendering (doesn't work yet)
+5/25/17:
+	- Finished keyboard and mouse input processing
+	- Got terrain rendering
 	
 TIMELINE
 	1. Terrain
-		- Rendering
+*		- Rendering
 		- Optimization
-		- Multitexturing
+		- Multitexturing [TerrainTexturePack]
 	2. Post Processing
 		- Depth of Field
 		- Fix FXAA (Faster and better)
@@ -58,10 +61,12 @@ TIMELINE
 		- Particle Effects
 *	5. Window Icons
 	6. Lighting
+		- Fix lighting calculations
 		- Fix Cone Light Range
 		- Project Lighting (i.e. Position) with View Matrix
 	7. Decal and Transparency Passes
-	8. Input Processing and First Person Movement
+	8. Controller Input
+		- First Person Movement
 	9. Skybox
 	10. God Rays
 	11. Order Independent Transparency
@@ -78,7 +83,7 @@ TIMELINE
 		- NIO
 		- Encoding/Decoding Traffic
 	19. User Interface
-	20. Input Processing
+*	20. Input Processing
 	21. Photo-realistic Rendering
 
 TODO

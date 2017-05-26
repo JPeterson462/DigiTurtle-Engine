@@ -10,5 +10,5 @@ in vec2 pass_TextureCoord;
 out vec4 out_Color;
 
 void main(void) {
-	out_Color = vec4(lightColor.rgb * lightColor.a, 1.0) * texture2D(diffuseTexture, pass_TextureCoord);
+	out_Color = texture2D(diffuseTexture, pass_TextureCoord) * lightColor;
 }

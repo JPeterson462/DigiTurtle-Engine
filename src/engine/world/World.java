@@ -18,21 +18,24 @@ public class World {
 	
 	private ArrayList<Light> lights = new ArrayList<>();
 	
-	private Terrain terrain;
+	private TerrainChunk[][] terrain;
 	
 	private float width, height, resolution;
 	
-	public World(float width, float height, float resolution) {
-		this.width = width;
-		this.height = height;
+	public World(float chunkWidth, float chunkHeight, float resolution, int width, int height) {
+		this.width = chunkWidth;
+		this.height = chunkHeight;
 		this.resolution = resolution;
+		terrain = new TerrainChunk[width][height];
 	}
 
-	public void setTerrain(TerrainGenerator generator, float x, float z) {
-		terrain = new Terrain(generator, Math.floorDiv((int) width, (int) resolution),  Math.floorDiv((int) height, (int) resolution), resolution, x, z);
+	public void setTerrain(int i, int j, TerrainGenerator generator) {
+		float x = i * width - (terrain.length * width) / 2;
+		float z = j * height - (terrain[0].length * height) / 2;
+		terrain[i][j] = new TerrainChunk(generator, Math.floorDiv((int) width, (int) resolution),  Math.floorDiv((int) height, (int) resolution), resolution, x, z);
 	}
 	
-	public Terrain getTerrain() {
+	public TerrainChunk[][] getTerrain() {
 		return terrain;
 	}
 	

@@ -31,6 +31,8 @@ import engine.world.Entity;
 import engine.world.Material;
 import engine.world.PointLight;
 import engine.world.SpotLight;
+import engine.world.TerrainGenerator;
+import engine.world.TerrainTexturePack;
 import engine.world.World;
 import library.audio.AudioData;
 import library.audio.AudioDecoderLibrary;
@@ -41,6 +43,7 @@ import library.models.Animation;
 import library.models.AnimationImporterLibrary;
 import library.models.Model;
 import library.models.ModelImporterLibrary;
+import utils.OpenSimplexNoise;
 
 public class Test {
 	
@@ -142,10 +145,21 @@ public class Test {
 			world.addLight(spotLight);
 			scene.setLightLevel(0.3f);
 			
-			world.setTerrain(0, 0, (x, z) -> 0);
-			world.setTerrain(1, 0, (x, z) -> 0);
-			world.setTerrain(0, 1, (x, z) -> 0);
-			world.setTerrain(1, 1, (x, z) -> 0);
+			long seed = System.nanoTime();
+			OpenSimplexNoise noise = new OpenSimplexNoise(seed);
+			final float noiseResolution = 0.01f;
+			
+			Texture blendMap = renderer.createTexture(new AssetInputStream("blendMap.png"), false);
+			Texture rTexture = renderer.createTexture(new AssetInputStream("mud.png"), true);
+			Texture gTexture = renderer.createTexture(new AssetInputStream("grassFlowers.png"), true);
+			Texture bTexture = renderer.createTexture(new AssetInputStream("path.png"), true);
+			Texture aTexture = renderer.createTexture(new AssetInputStream("grass.png"), true);
+			TerrainTexturePack pack = new TerrainTexturePack(rTexture, gTexture, bTexture, aTexture, blendMap);
+			TerrainGenerator gen = (x, y) -> 15 * (float) noise.eval(x * noiseResolution, y * noiseResolution);
+			world.setTerrain(0, 0, gen, pack);
+			world.setTerrain(1, 0, gen, pack);
+			world.setTerrain(0, 1, gen, pack);
+			world.setTerrain(1, 1, gen, pack);
 			
 			soundSystem = new ALSoundSystem();
 			soundSystem.createContext();

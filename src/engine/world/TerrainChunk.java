@@ -18,11 +18,15 @@ public class TerrainChunk {
 	private ArrayList<Integer> indices = new ArrayList<>();
 
 	private Geometry geometry;
+	
+	private TerrainTexturePack texturePack;
 
-	public TerrainChunk(TerrainGenerator generator, int width, int height, float resolution, float x, float z) {
+	public TerrainChunk(TerrainGenerator generator, int width, int height, float resolution, float x, float z, TerrainTexturePack texturePack) {
+		this.texturePack = texturePack;
 		this.generator = generator;
-		for (int i = 0; i <= width; i++) {
-			for (int j = 0; j <= height; j++) {
+		int iwidth = width + 1, iheight = height + 1;
+		for (int i = 0; i < iwidth; i++) {
+			for (int j = 0; j < iheight; j++) {
 				Vector3f position = new Vector3f(i * resolution + x, 0, j * resolution + z);
 				position.y = generator.getHeightAt(position.x, position.z);
 				Vector2f textureCoord = new Vector2f((float) i / (float) width, (float) j / (float) height);
@@ -30,10 +34,10 @@ public class TerrainChunk {
 				vertices.add(new Vertex().position(position).textureCoord(textureCoord).normal(normal));
 			}
 		}
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				int topLeft = (i * width) + j, topRight = topLeft + 1;
-				int bottomLeft = ((i + 1) * width) + j, bottomRight = bottomLeft + 1;
+		for (int i = 0; i < iwidth - 1; i++) {
+			for (int j = 0; j < iheight - 1; j++) {
+				int topLeft = (i * iwidth) + j, topRight = topLeft + 1;
+				int bottomLeft = ((i + 1) * iwidth) + j, bottomRight = bottomLeft + 1;
 				indices.add(topLeft);
 				indices.add(bottomLeft);
 				indices.add(topRight);
@@ -71,6 +75,10 @@ public class TerrainChunk {
 
 	public float getHeightAt(float x, float z) {
 		return generator.getHeightAt(x, z);
+	}
+
+	public TerrainTexturePack getTexturePack() {
+		return texturePack;
 	}
 
 }

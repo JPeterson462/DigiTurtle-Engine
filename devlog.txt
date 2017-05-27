@@ -46,12 +46,18 @@
 5/25/17:
 	- Finished keyboard and mouse input processing
 	- Got terrain rendering
+5/26/17:
+	- Fixed terrain mesh
+	- Terrain multitexturing
+
+https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
 	
 TIMELINE
 	1. Terrain
 *		- Rendering
 		- Optimization
-		- Multitexturing [TerrainTexturePack]
+*		- Multitexturing [TerrainTexturePack]
+		- Normal Mapping
 	2. Post Processing
 		- Depth of Field
 		- Fix FXAA (Faster and better)
@@ -62,6 +68,7 @@ TIMELINE
 *	5. Window Icons
 	6. Lighting
 		- Fix lighting calculations
+		- Materials
 		- Fix Cone Light Range
 		- Project Lighting (i.e. Position) with View Matrix
 	7. Decal and Transparency Passes
@@ -87,7 +94,6 @@ TIMELINE
 	21. Photo-realistic Rendering
 
 TODO
-	- Terrain; Multitexturing
 	- Shadows
 	- OBJ Material Loading?
 	- Music instance that waits for audio rather than ending
@@ -96,7 +102,6 @@ TODO
 	- Percentage closer filtering
 	
 	- Instanced Geometry
-	- Window Icons
 	- Shaders
 		Lighting
 		- Fix cone light falloff

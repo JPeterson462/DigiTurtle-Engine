@@ -27,6 +27,7 @@ import engine.world.Material;
 import engine.world.PointLight;
 import engine.world.SpotLight;
 import engine.world.TerrainChunk;
+import engine.world.TerrainTexturePack;
 
 public class DeferredRenderingPipeline implements RenderingPipeline {
 	
@@ -154,6 +155,8 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		terrainShader_viewMatrix = terrainShader.getUniformLocation("viewMatrix");
 		terrainShader_modelMatrix = terrainShader.getUniformLocation("modelMatrix");
 		terrainShader_projectionMatrix = terrainShader.getUniformLocation("projectionMatrix");
+		TerrainTexturePack texturePack = new TerrainTexturePack(null, null, null, null, null);
+		texturePack.connect(terrainShader);
 		terrainShader.unbind();
 		// Fullscreen Pass
 		lightingFullscreenPass = createFullscreenQuad(renderer);
@@ -214,21 +217,35 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 				normalMappedSkeletalGeometryShader_projectionMatrix, normalMappedSkeletalGeometryShader_viewMatrix, normalMappedSkeletalGeometryShader_modelMatrix);
 		geometryPass.unbind();
 	}
+
+	private Matrix4f nullMatrix = new Matrix4f();
 	
 	private void renderTerrain(Matrix4f modelMatrix, Shader shader, Camera camera, TerrainChunk[][] terrain, int projectionMatrixLocation,
 			int viewMatrixLocation, int modelMatrixLocation) {
 		shader.bind();
 		shader.uploadMatrix(projectionMatrixLocation, camera.getProjectionMatrix());
 		shader.uploadMatrix(viewMatrixLocation, camera.getViewMatrix());
-		shader.uploadMatrix(modelMatrixLocation, modelMatrix.identity());
+		shader.uploadMatrix(modelMatrixLocation, nullMatrix);
+		TerrainTexturePack texturePack = null;
+		Geometry geometry = null;
 		for (int i = 0; i < terrain.length; i++) {
 			for (int j = 0; j < terrain[0].length; j++) {
 				TerrainChunk chunk = terrain[i][j];
-				Geometry geometry = chunk.getGeometry(renderer);
+				geometry = chunk.getGeometry(renderer);
 				geometry.bind();
+				TerrainTexturePack oldTexturePack = texturePack;
+				texturePack = chunk.getTexturePack();
+				if (oldTexturePack == null || oldTexturePack.hashCode() != texturePack.hashCode()) {
+					texturePack.bind();
+				}
 				geometry.render();
-				geometry.unbind();
 			}
+		}
+		if (geometry != null) {
+			geometry.unbind();
+		}
+		if (texturePack != null) {
+			texturePack.unbind();
 		}
 		shader.unbind();
 	}

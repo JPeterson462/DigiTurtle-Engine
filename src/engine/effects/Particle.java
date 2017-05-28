@@ -126,7 +126,7 @@ public class Particle implements Comparable<Particle> {
 		return particleTemplate;
 	}
 	
-	public boolean update(float delta, Vector3f cameraPosition) {System.out.println(position);
+	public boolean update(float delta, Vector3f cameraPosition) {
 		velocity.y += GRAVITY * gravityEffect * delta;
 		position.fma(delta, velocity);
 		elapsedTime += delta;
@@ -138,7 +138,7 @@ public class Particle implements Comparable<Particle> {
 	
 	public void store(ParticleTemplate instance, Matrix4f modelMatrix, Quaternionf orientation) {
 		modelMatrix.identity().translationRotateScale(position, orientation, scale);
-		instance.setModelMatrix(modelMatrix, rotation);
+		instance.setModelMatrix(modelMatrix, rotation, scale);
 		instance.setTextureAtlasOffset(new Vector4f(atlasOffset.x, atlasOffset.y, nextAtlasOffset.x, nextAtlasOffset.y));
 		instance.setBlendFactor(blendFactor);
 	}

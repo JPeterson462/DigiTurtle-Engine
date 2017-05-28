@@ -21,6 +21,10 @@ public class GLVertexBufferObject implements GLResource {
 		return id;
 	}
 	
+	public void orphanBuffer(int size, int usage) {
+		GL15.glBufferData(type, size, usage);
+	}
+	
 	public void bufferData(Buffer data, int usage) {
 		if (data instanceof FloatBuffer) {
 			GL15.glBufferData(type, (FloatBuffer) data, usage);

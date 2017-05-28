@@ -22,6 +22,9 @@ public class ParticleRenderer {
 		this.renderer = renderer;
 		HashMap<Integer, String> attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
+		attributes.put(1, "modelViewMatrix");
+		attributes.put(5, "textureAtlasOffset");
+		attributes.put(6, "blendFactor");
 		shader = renderer.createShader(getClass().getClassLoader().getResourceAsStream("engine/scene/deferred/particleVertex.glsl"), getClass().getClassLoader().getResourceAsStream("engine/scene/deferred/particleFragment.glsl"), attributes);
 		shader.bind();
 		shader.uploadMatrix(shader.getUniformLocation("projectionMatrix"), camera.getProjectionMatrix());

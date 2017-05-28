@@ -74,6 +74,7 @@ public abstract class ParticleEmitter {
 					scaleVariance, rotationVariance, lifeVariance, position, frames));
 			time -= emissionRate;
 		}
+		System.out.println(particles.size() + " " + delta);
 	}
 
 	public int getParticleCount() {

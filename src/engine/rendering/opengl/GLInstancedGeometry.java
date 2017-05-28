@@ -144,15 +144,12 @@ public class GLInstancedGeometry<T extends InstanceTemplate> implements Instance
 	@Override
 	public void render(int instanceCount) {
 		if (updateInstances) {
-			dataVbo.bind();
-			dataVbo.bufferData(dataBuffer, GL15.GL_DYNAMIC_DRAW);
-			GLGeometryUtils.bindAttributes(flags, vao, vertexSize);
-			dataVbo.unbind();
 			instanceVbo.bind();
 			for (int i = 0; i < instanceCount; i++) {
 				instances[i].uploadInstance(instanceBuffer, instances[i].getInstanceSize() * i);
 			}
-			instanceVbo.bufferData(instanceBuffer, GL15.GL_STREAM_DRAW);
+			instanceVbo.orphanBuffer(instanceBuffer.limit() << 2, GL15.GL_STREAM_DRAW);
+			instanceVbo.bufferSubData(instanceBuffer, 0);
 			InstanceTemplate template = null;
 			try {
 				template = type.newInstance();

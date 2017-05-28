@@ -27,13 +27,13 @@ public class ParticleTemplate implements InstanceTemplate {
 		this.camera = camera;
 	}
 	
-	public void setModelMatrix(Matrix4f modelMatrix, float zRotation) {
+	public void setModelMatrix(Matrix4f modelMatrix, float zRotation, float size) {
 		modelViewMatrix.set(camera.getViewMatrix());
 		modelViewMatrix.mul(modelMatrix, modelViewMatrix);
 		modelViewMatrix.m00(1); modelViewMatrix.m10(0); modelViewMatrix.m20(0);
 		modelViewMatrix.m01(0); modelViewMatrix.m11(1); modelViewMatrix.m21(0);
 		modelViewMatrix.m02(0); modelViewMatrix.m12(0); modelViewMatrix.m22(1);
-		modelViewMatrix.rotateZ((float) Math.toRadians(zRotation));
+		modelViewMatrix.rotateZ((float) Math.toRadians(zRotation)).scale(size);
 	}
 
 	public void setTextureAtlasOffset(Vector4f textureAtlasOffset) {
@@ -68,28 +68,23 @@ public class ParticleTemplate implements InstanceTemplate {
 	public void bindAttributes(GLVertexArrayObject vao, int attributeOffset) {
 		vao.vertexAttributeFloat(attributeOffset + 0, 4, getInstanceSize() << 2, 0 << 2);
 		vao.instanceAttribute(attributeOffset + 0, 1);
-		vao.vertexAttributeFloat(attributeOffset + 1, 4, getInstanceSize() << 2, 1 << 2);
+		vao.vertexAttributeFloat(attributeOffset + 1, 4, getInstanceSize() << 2, 4 << 2);
 		vao.instanceAttribute(attributeOffset + 1, 1);
-		vao.vertexAttributeFloat(attributeOffset + 2, 4, getInstanceSize() << 2, 2 << 2);
+		vao.vertexAttributeFloat(attributeOffset + 2, 4, getInstanceSize() << 2, 8 << 2);
 		vao.instanceAttribute(attributeOffset + 2, 1);
-		vao.vertexAttributeFloat(attributeOffset + 3, 4, getInstanceSize() << 2, 3 << 2);
+		vao.vertexAttributeFloat(attributeOffset + 3, 4, getInstanceSize() << 2, 12 << 2);
 		vao.instanceAttribute(attributeOffset + 3, 1);
-		vao.vertexAttributeFloat(attributeOffset + 4, 4, getInstanceSize() << 2, 4 << 2);
+		vao.vertexAttributeFloat(attributeOffset + 4, 4, getInstanceSize() << 2, 16 << 2);
 		vao.instanceAttribute(attributeOffset + 4, 1);
-		vao.vertexAttributeFloat(attributeOffset + 5, 1, getInstanceSize() << 2, 5 << 2);
+		vao.vertexAttributeFloat(attributeOffset + 5, 1, getInstanceSize() << 2, 20 << 2);
 		vao.instanceAttribute(attributeOffset + 5, 1);
 	}
 
 	@Override
 	public void uploadInstance(FloatBuffer buffer, int position) {
-		int oldPosition = buffer.position();
-		buffer.position(position);
-		modelViewMatrix.get(buffer);
-		buffer.position(buffer.position() + 16);
-		textureAtlasOffset.get(buffer);
-		buffer.position(buffer.position() + 4);
-		buffer.put(buffer.position(), blendFactor);
-		buffer.position(oldPosition);
+		modelViewMatrix.get(position, buffer);
+		textureAtlasOffset.get(position + 16, buffer);
+		buffer.put(position + 20, blendFactor);
 	}
 
 }

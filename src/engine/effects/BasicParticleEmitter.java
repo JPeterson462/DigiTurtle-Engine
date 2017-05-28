@@ -49,7 +49,7 @@ public class BasicParticleEmitter extends ParticleEmitter {
 
 	@Override
 	public BlendMode getBlendMode() {
-		return BlendMode.ADDITIVE;
+		return BlendMode.DEFAULT;
 	}
 
 	@Override

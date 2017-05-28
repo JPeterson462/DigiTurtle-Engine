@@ -170,13 +170,13 @@ public class Test {
 			soundSystem.createContext();
 			
 			AudioData data = new AudioData();
-			AudioStream stream = AudioDecoderLibrary.findDecoder("ogx").openStream(new AssetInputStream("01_Critical_Acclaim.ogx.ogg"), data);
+			AudioStream stream = AudioDecoderLibrary.findDecoder("ogg").openStream(new AssetInputStream("01_Critical_Acclaim.ogx.ogg"), data);
 			music = soundSystem.createMusic(stream, data);
 			music.setLooping(true);
 			music.play();
 			
 			particleRenderer = new ParticleRenderer(renderer, camera);
-			ParticleEmitter emitter0 = new BasicParticleEmitter(camera, aTexture, new Vector3f(0, 5, 0), 1, 0.5f, 0, 10, 10, 0.1f, 0.1f, 0.1f, 0.1f, new int[] { 3, 3 });
+			ParticleEmitter emitter0 = new BasicParticleEmitter(camera, aTexture, new Vector3f(0, 5, -50), 0.001f, 5f, 0.4f, 10, 10, 0.1f, 0.1f, 0.1f, 0.1f, new int[] { 3, 3 });
 			particleRenderer.addEmitter(emitter0);
 		});
 		while (renderer.validContext()) {

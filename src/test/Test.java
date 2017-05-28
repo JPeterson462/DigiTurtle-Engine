@@ -10,6 +10,9 @@ import engine.CoreSettings;
 import engine.FirstPersonCamera;
 import engine.GraphicsSettings;
 import engine.Importers;
+import engine.effects.BasicParticleEmitter;
+import engine.effects.ParticleEmitter;
+import engine.effects.ParticleRenderer;
 import engine.rendering.Geometry;
 import engine.rendering.Renderer;
 import engine.rendering.Texture;
@@ -72,6 +75,8 @@ public class Test {
 	private static TextBuffer buffer;
 	private static TextRenderer textRenderer;
 	
+	private static ParticleRenderer particleRenderer;
+	
 	public static void main(String[] args) {
 		Log.set(Log.LEVEL_DEBUG);
 		Renderer renderer = new GLRenderer();
@@ -125,7 +130,7 @@ public class Test {
 			entity.addComponent(new AnimationComponent());
 			entity.getComponent(AnimationComponent.class).doAnimation(animation);
 			
-			world = new World(500, 500, 5, 2, 2);
+			world = new World(2000, 2000, 10, 2, 2);
 			
 			world.addEntity(entity);
 			
@@ -169,15 +174,19 @@ public class Test {
 			music = soundSystem.createMusic(stream, data);
 			music.setLooping(true);
 			music.play();
+			
+			particleRenderer = new ParticleRenderer(renderer, camera);
+			ParticleEmitter emitter0 = new BasicParticleEmitter(camera, aTexture, new Vector3f(0, 5, 0), 1, 0.5f, 0, 10, 10, 0.1f, 0.1f, 0.1f, 0.1f, new int[] { 3, 3 });
+			particleRenderer.addEmitter(emitter0);
 		});
 		while (renderer.validContext()) {
 			float dt = renderer.getDeltaTime();
 			renderer.prepareContext();
 			
 			t += 90 * dt;
-			float dist = 50;
+			float dist = 10;
 			
-			entity.setScale(new Vector3f(5));
+			entity.setScale(new Vector3f(1));
 //			entity.setScale(new Vector3f(0.01f));
 			
 //			entity.setOrientation(new Quaternionf().rotationY((float) Math.toRadians(t)));
@@ -185,9 +194,9 @@ public class Test {
 			Vector3f v = new Vector3f(10 * (float) Math.cos(Math.toRadians(t)), 0, 10 * (float) Math.sin(Math.toRadians(t)));
 //			spotLight.setDirection(v);
 			
-			float height = 25;
-//			cameraPosition.set(0, height, dist);
-			cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)) + 5, dist, dist * (float) Math.sin(Math.toRadians(t)) + 5);
+			float height = 5;
+			cameraPosition.set(0, height, dist);
+//			cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)) + 5, dist, dist * (float) Math.sin(Math.toRadians(t)) + 5);
 			camera.getViewMatrix().setLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0, height, 0, 0, 1, 0);
 			
 			entity.update(dt);
@@ -195,9 +204,12 @@ public class Test {
 			soundSystem.checkError();
 			music.update();
 			
-			scene.render(camera, cameraPosition, world);
+			//scene.render(camera, cameraPosition, world);
 			
-			buffer.render();
+			particleRenderer.update(dt, cameraPosition);
+			particleRenderer.render();
+			
+//			buffer.render();
 			
 			renderer.updateContext();
 		}
@@ -205,7 +217,7 @@ public class Test {
 			music.delete();
 			soundSystem.destroyContext();
 			
-			buffer.delete();
+//			buffer.delete();
 			//cleanup
 		});
 	}

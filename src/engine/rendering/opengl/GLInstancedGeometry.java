@@ -1,5 +1,6 @@
 package engine.rendering.opengl;
 
+import java.lang.reflect.Array;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -7,33 +8,46 @@ import java.util.ArrayList;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL31;
 
-import engine.rendering.Geometry;
+import engine.rendering.InstanceTemplate;
+import engine.rendering.InstancedGeometry;
 import engine.rendering.Vertex;
 import library.opengl.GLVertexArrayObject;
 import library.opengl.GLVertexBufferObject;
 
-public class GLGeometry implements Geometry {
-	
+public class GLInstancedGeometry<T extends InstanceTemplate> implements InstancedGeometry<T> {
+
 	private GLVertexArrayObject vao;
 	
-	private GLVertexBufferObject dataVbo, elementVbo;
+	private GLVertexBufferObject dataVbo, elementVbo, instanceVbo;
 	
-	private int[] attributes;
+	private int[] attributes, instanceAttributes;
 	
 	private int vertexCount;
 	
 	private int drawCall;
 	
-	private FloatBuffer dataBuffer;
+	private int flags, vertexSize;
+	
+	private T[] instances;
+	
+	private FloatBuffer dataBuffer, instanceBuffer;
 	
 	private IntBuffer indexBuffer;
 	
-	public GLGeometry(ArrayList<Vertex> vertices, ArrayList<Integer> indices, int flags) {
+	private boolean updateInstances = true;
+	
+	private Class<T> type;
+	
+	@SuppressWarnings("unchecked")
+	public GLInstancedGeometry(ArrayList<Vertex> vertices, ArrayList<Integer> indices, int flags, Class<T> type, int maxInstances) {
+		this.type = type;
+		this.flags = flags;
 		drawCall = GL11.GL_TRIANGLES;
 		vao = new GLVertexArrayObject();
 		vao.bind();
-		int vertexSize = GLGeometryUtils.getVertexSize(flags);
+		vertexSize = GLGeometryUtils.getVertexSize(flags);
 		attributes = GLGeometryUtils.getAttributes(flags);
 		dataBuffer = BufferUtils.createFloatBuffer(vertices.size() * vertexSize);
 		dataBuffer.limit(dataBuffer.capacity());
@@ -77,9 +91,24 @@ public class GLGeometry implements Geometry {
 		}
 		dataVbo = new GLVertexBufferObject(GL15.GL_ARRAY_BUFFER);
 		dataVbo.bind();
-		dataVbo.bufferData(dataBuffer, GL15.GL_STATIC_DRAW);
+		dataVbo.bufferData(dataBuffer, GL15.GL_DYNAMIC_DRAW);
 		GLGeometryUtils.bindAttributes(flags, vao, vertexSize);
 		dataVbo.unbind();
+		InstanceTemplate template = null;
+		try {
+			template = type.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+		instanceBuffer = BufferUtils.createFloatBuffer(template.getInstanceSize() * maxInstances);
+		instanceBuffer.limit(instanceBuffer.capacity());
+		instances = (T[]) Array.newInstance(type, maxInstances);
+		instanceVbo = new GLVertexBufferObject(GL15.GL_ARRAY_BUFFER);
+		instanceVbo.bind();
+		template.bindAttributes(vao, attributes.length);
+		instanceVbo.unbind();
+		instanceAttributes = new int[template.getAttributeCount()];
+		template.getAttributes(instanceAttributes, 0, attributes.length);
 		vao.unbind();	
 		vertexCount = vertices.size();
 		if (indices != null && indices.size() > 0) {
@@ -95,22 +124,49 @@ public class GLGeometry implements Geometry {
 			elementVbo.unbind();
 		}
 	}
+	
+	@Override
+	public void updateInstance(int instance, T newValue) {
+		instances[instance] = newValue;
+		updateInstances = true;
+	}
 
 	@Override
 	public void bind() {
 		vao.bind();
 		vao.enableAttributes(attributes);
+		vao.enableAttributes(instanceAttributes);
 		if (elementVbo != null) {
 			elementVbo.bind();
 		}
 	}
 
 	@Override
-	public void render() {
+	public void render(int instanceCount) {
+		if (updateInstances) {
+			dataVbo.bind();
+			dataVbo.bufferData(dataBuffer, GL15.GL_DYNAMIC_DRAW);
+			GLGeometryUtils.bindAttributes(flags, vao, vertexSize);
+			dataVbo.unbind();
+			instanceVbo.bind();
+			for (int i = 0; i < instanceCount; i++) {
+				instances[i].uploadInstance(instanceBuffer, instances[i].getInstanceSize() * i);
+			}
+			instanceVbo.bufferData(instanceBuffer, GL15.GL_STREAM_DRAW);
+			InstanceTemplate template = null;
+			try {
+				template = type.newInstance();
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new RuntimeException(e);
+			}
+			template.bindAttributes(vao, attributes.length);
+			instanceVbo.unbind();
+			updateInstances = false;
+		}
 		if (elementVbo != null) {
-			GL11.glDrawElements(drawCall, vertexCount, GL11.GL_UNSIGNED_INT, 0);
+			GL31.glDrawElementsInstanced(drawCall, vertexCount, GL11.GL_UNSIGNED_INT, 0, instanceCount);
 		} else {
-			GL11.glDrawArrays(drawCall, 0, vertexCount);
+			GL31.glDrawArraysInstanced(drawCall, 0, vertexCount, instanceCount);
 		}
 	}
 
@@ -119,6 +175,7 @@ public class GLGeometry implements Geometry {
 		if (elementVbo != null) {
 			elementVbo.unbind();
 		}
+		vao.disableAttributes(instanceAttributes);
 		vao.disableAttributes(attributes);
 		vao.unbind();
 	}

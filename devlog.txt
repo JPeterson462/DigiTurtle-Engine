@@ -49,6 +49,8 @@
 5/26/17:
 	- Fixed terrain mesh
 	- Terrain multitexturing
+5/27/17:
+	- Started instanced rendering
 
 https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
 	

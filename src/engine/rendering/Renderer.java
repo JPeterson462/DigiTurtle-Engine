@@ -14,6 +14,10 @@ public interface Renderer {
 	public Geometry createGeometry(ArrayList<Vertex> vertices, int flags);
 
 	public Geometry createGeometry(ArrayList<Vertex> vertices, ArrayList<Integer> indices, int flags);
+	
+	public <T extends InstanceTemplate> InstancedGeometry<T> createInstancedGeometry(ArrayList<Vertex> vertices, int flags, Class<T> type, int maxInstances);
+
+	public <T extends InstanceTemplate> InstancedGeometry<T> createInstancedGeometry(ArrayList<Vertex> vertices, ArrayList<Integer> indices, int flags, Class<T> type, int maxInstances);
 
 	public Texture createTexture(InputStream stream, boolean repeat);
 	
@@ -34,9 +38,7 @@ public interface Renderer {
 	public int getFPS();
 
 	public float getDeltaTime();
-	
-	public void enableAdditiveBlending();
-	
-	public void disableAdditiveBlending();
+
+	public void setBlendMode(BlendMode mode);
 	
 }

@@ -9,9 +9,11 @@ import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+
 import engine.Camera;
 import engine.CoreSettings;
 import engine.GraphicsSettings;
+import engine.rendering.BlendMode;
 import engine.rendering.Framebuffer;
 import engine.rendering.Geometry;
 import engine.rendering.Renderer;
@@ -204,6 +206,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> defaultSkeletalEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities, TerrainChunk[][] terrain) {
+		renderer.setBlendMode(BlendMode.OVERWRITE);
 		Matrix4f modelMatrix = new Matrix4f();
 		geometryPass.bind();
 		renderTerrain(modelMatrix, terrainShader, camera, terrain, terrainShader_projectionMatrix, terrainShader_viewMatrix, terrainShader_modelMatrix);
@@ -216,6 +219,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		renderGeometry(modelMatrix, normalMappedSkeletalGeometryShader, camera, normalMappedSkeletalEntities, true, true,
 				normalMappedSkeletalGeometryShader_projectionMatrix, normalMappedSkeletalGeometryShader_viewMatrix, normalMappedSkeletalGeometryShader_modelMatrix);
 		geometryPass.unbind();
+		renderer.setBlendMode(BlendMode.DEFAULT);
 	}
 
 	private Matrix4f nullMatrix = new Matrix4f();
@@ -295,9 +299,9 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
 		lightingPass.bind();
 		renderAmbientLights(lightLevel, ambientLightShader, camera, lights);
-		renderer.enableAdditiveBlending();
+		renderer.setBlendMode(BlendMode.ADDITIVE);
 		renderLights(pointLightShader, camera, lights, cameraPosition);
-		renderer.disableAdditiveBlending();
+		renderer.setBlendMode(BlendMode.DEFAULT);
 		lightingPass.unbind();
 	}
 	

@@ -17,9 +17,12 @@ import engine.AssetInputStream;
 import engine.CoreSettings;
 import engine.GraphicsSettings;
 import engine.IOUtils;
+import engine.rendering.BlendMode;
 import engine.rendering.Framebuffer;
 import engine.rendering.FreeFunction;
 import engine.rendering.Geometry;
+import engine.rendering.InstanceTemplate;
+import engine.rendering.InstancedGeometry;
 import engine.rendering.Renderer;
 import engine.rendering.Shader;
 import engine.rendering.Texture;
@@ -95,6 +98,14 @@ public class GLRenderer implements Renderer {
 	@Override
 	public Geometry createGeometry(ArrayList<Vertex> vertices, ArrayList<Integer> indices, int flags) {
 		return new GLGeometry(vertices, indices, flags);
+	}
+
+	public <T extends InstanceTemplate> InstancedGeometry<T> createInstancedGeometry(ArrayList<Vertex> vertices, int flags, Class<T> type, int maxInstances) {
+		return new GLInstancedGeometry<T>(vertices, null, flags, type, maxInstances);
+	}
+
+	public <T extends InstanceTemplate> InstancedGeometry<T> createInstancedGeometry(ArrayList<Vertex> vertices, ArrayList<Integer> indices, int flags, Class<T> type, int maxInstances) {
+		return new GLInstancedGeometry<T>(vertices, indices, flags, type, maxInstances);
 	}
 
 	@Override
@@ -180,15 +191,25 @@ public class GLRenderer implements Renderer {
 		}
 		return 1f / fps;
 	}
+	
+	private BlendMode current = null;
 
 	@Override
-	public void enableAdditiveBlending() {
-		GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
+	public void setBlendMode(BlendMode mode) {
+		if (current != null && current.equals(mode)) {
+			return; // Ignore this call
+		}
+		switch (mode) {
+			case ADDITIVE:
+				GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
+				break;
+			case DEFAULT:
+				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+				break;
+			case OVERWRITE:
+				GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);
+				break;
+		}
 	}
-
-	@Override
-	public void disableAdditiveBlending() {
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-	}
-
+	
 }

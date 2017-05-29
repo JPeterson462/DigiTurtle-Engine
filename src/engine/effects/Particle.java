@@ -138,7 +138,7 @@ public class Particle implements Comparable<Particle> {
 	
 	public void store(ParticleTemplate instance, Matrix4f modelMatrix, Quaternionf orientation) {
 		modelMatrix.identity().translationRotateScale(position, orientation, scale);
-		instance.setModelMatrix(modelMatrix, rotation, scale);
+		instance.setModelMatrix(modelMatrix, position, rotation, scale);
 		instance.setTextureAtlasOffset(new Vector4f(atlasOffset.x, atlasOffset.y, nextAtlasOffset.x, nextAtlasOffset.y));
 		instance.setBlendFactor(blendFactor);
 	}

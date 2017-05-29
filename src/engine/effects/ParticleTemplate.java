@@ -3,6 +3,7 @@ package engine.effects;
 import java.nio.FloatBuffer;
 
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import engine.Camera;
@@ -10,30 +11,40 @@ import engine.rendering.InstanceTemplate;
 import library.opengl.GLVertexArrayObject;
 
 public class ParticleTemplate implements InstanceTemplate {
-	
+
 	private Camera camera;
-	
+
 	private Matrix4f modelViewMatrix = new Matrix4f();
-	
+
 	private Vector4f textureAtlasOffset = new Vector4f();
-	
+
 	private float blendFactor;
 
 	public ParticleTemplate() {
-		
+
 	}
 
 	public void setCamera(Camera camera) {
 		this.camera = camera;
 	}
-	
-	public void setModelMatrix(Matrix4f modelMatrix, float zRotation, float size) {
-		modelViewMatrix.set(camera.getViewMatrix());
-		modelViewMatrix.mul(modelMatrix, modelViewMatrix);
-		modelViewMatrix.m00(1); modelViewMatrix.m10(0); modelViewMatrix.m20(0);
-		modelViewMatrix.m01(0); modelViewMatrix.m11(1); modelViewMatrix.m21(0);
-		modelViewMatrix.m02(0); modelViewMatrix.m12(0); modelViewMatrix.m22(1);
-		modelViewMatrix.rotateZ((float) Math.toRadians(zRotation)).scale(size);
+
+	public void setModelMatrix(Matrix4f modelMatrix, Vector3f position, float zRotation, float scale) {
+		modelViewMatrix.identity();
+		Matrix4f viewMatrix = camera.getViewMatrix();
+		modelMatrix.identity();
+		modelMatrix.m00(viewMatrix.m00());
+		modelMatrix.m01(viewMatrix.m10());
+		modelMatrix.m02(viewMatrix.m20());
+		modelMatrix.m10(viewMatrix.m01());
+		modelMatrix.m11(viewMatrix.m11());
+		modelMatrix.m12(viewMatrix.m21());
+		modelMatrix.m20(viewMatrix.m02());
+		modelMatrix.m21(viewMatrix.m12());
+		modelMatrix.m22(viewMatrix.m22());
+		modelMatrix.translate(position);
+		modelMatrix.rotate(zRotation, new Vector3f(0, 0, 1));
+		modelMatrix.scale(scale);
+		viewMatrix.mul(modelMatrix, modelViewMatrix);
 	}
 
 	public void setTextureAtlasOffset(Vector4f textureAtlasOffset) {

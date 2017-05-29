@@ -51,8 +51,12 @@
 	- Terrain multitexturing
 5/27/17:
 	- Started instanced rendering
+5/28/17:
+	- NIO TCP Networking
 
 https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
+
+-- Copy depth texture from scene to default depth buffer
 	
 TIMELINE
 	1. Terrain
@@ -90,7 +94,9 @@ TIMELINE
 		- Optimization
 	18. Networking
 		- NIO
-		- Encoding/Decoding Traffic
+*			- TCP
+			- UDP
+*		- Encoding/Decoding Traffic
 	19. User Interface
 *	20. Input Processing
 	21. Photo-realistic Rendering

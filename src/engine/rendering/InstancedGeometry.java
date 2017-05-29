@@ -6,7 +6,9 @@ public interface InstancedGeometry<T extends InstanceTemplate> {
 	
 	public void bind();
 	
-	public void render(int instanceCount);
+	public void update(int instanceCount);
+	
+	public void render();
 	
 	public void unbind();
 	

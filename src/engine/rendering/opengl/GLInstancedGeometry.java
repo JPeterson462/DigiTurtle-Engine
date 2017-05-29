@@ -40,13 +40,16 @@ public class GLInstancedGeometry<T extends InstanceTemplate> implements Instance
 	
 	private Class<T> type;
 	
+	private InstanceTemplate template;
+	
+	private int instanceCount;
+	
 	@SuppressWarnings("unchecked")
 	public GLInstancedGeometry(ArrayList<Vertex> vertices, ArrayList<Integer> indices, int flags, Class<T> type, int maxInstances) {
 		this.type = type;
 		this.flags = flags;
 		drawCall = GL11.GL_TRIANGLES;
 		vao = new GLVertexArrayObject();
-		vao.bind();
 		vertexSize = GLGeometryUtils.getVertexSize(flags);
 		attributes = GLGeometryUtils.getAttributes(flags);
 		dataBuffer = BufferUtils.createFloatBuffer(vertices.size() * vertexSize);
@@ -92,9 +95,7 @@ public class GLInstancedGeometry<T extends InstanceTemplate> implements Instance
 		dataVbo = new GLVertexBufferObject(GL15.GL_ARRAY_BUFFER);
 		dataVbo.bind();
 		dataVbo.bufferData(dataBuffer, GL15.GL_DYNAMIC_DRAW);
-		GLGeometryUtils.bindAttributes(flags, vao, vertexSize);
 		dataVbo.unbind();
-		InstanceTemplate template = null;
 		try {
 			template = type.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
@@ -105,11 +106,16 @@ public class GLInstancedGeometry<T extends InstanceTemplate> implements Instance
 		instances = (T[]) Array.newInstance(type, maxInstances);
 		instanceVbo = new GLVertexBufferObject(GL15.GL_ARRAY_BUFFER);
 		instanceVbo.bind();
-		template.bindAttributes(vao, attributes.length);
+		instanceVbo.orphanBuffer(template.getInstanceSize() << 2, GL15.GL_STREAM_DRAW);
 		instanceVbo.unbind();
+		vao.bind();
+		dataVbo.bind();
+		GLGeometryUtils.bindAttributes(flags, vao, vertexSize);
+		instanceVbo.bind();
+		template.bindAttributes(vao, attributes.length);
+		vao.unbind();	
 		instanceAttributes = new int[template.getAttributeCount()];
 		template.getAttributes(instanceAttributes, 0, attributes.length);
-		vao.unbind();	
 		vertexCount = vertices.size();
 		if (indices != null && indices.size() > 0) {
 			vertexCount = indices.size();
@@ -140,25 +146,33 @@ public class GLInstancedGeometry<T extends InstanceTemplate> implements Instance
 			elementVbo.bind();
 		}
 	}
-
+	
 	@Override
-	public void render(int instanceCount) {
+	public void update(int instanceCount) {
 		if (updateInstances) {
-			instanceVbo.bind();
+			this.instanceCount = instanceCount;
+			int bufferSize = 0;
+			instanceBuffer.limit(instanceBuffer.capacity());
 			for (int i = 0; i < instanceCount; i++) {
 				instances[i].uploadInstance(instanceBuffer, instances[i].getInstanceSize() * i);
+				bufferSize += instances[i].getInstanceSize();
 			}
+			instanceBuffer.limit(bufferSize);
+			if (instanceCount == 0) {
+				return;
+			}
+			instanceVbo.bind();
 			instanceVbo.orphanBuffer(instanceBuffer.limit() << 2, GL15.GL_STREAM_DRAW);
 			instanceVbo.bufferSubData(instanceBuffer, 0);
-			InstanceTemplate template = null;
-			try {
-				template = type.newInstance();
-			} catch (InstantiationException | IllegalAccessException e) {
-				throw new RuntimeException(e);
-			}
-			template.bindAttributes(vao, attributes.length);
 			instanceVbo.unbind();
 			updateInstances = false;
+		}
+	}
+
+	@Override
+	public void render() {
+		if (instanceCount == 0) {
+			return;
 		}
 		if (elementVbo != null) {
 			GL31.glDrawElementsInstanced(drawCall, vertexCount, GL11.GL_UNSIGNED_INT, 0, instanceCount);

@@ -45,9 +45,10 @@ public class ParticleRenderer {
 			emitter.getTexture().activeTexture(0);
 			emitter.getTexture().bind();
 			renderer.setBlendMode(emitter.getBlendMode());
-			emitter.getInstancedGeometry().bind();
 			emitter.store(emitter.getInstancedGeometry(), emitter.getMaxParticles());
-			emitter.getInstancedGeometry().render(emitter.getParticleCount());
+			emitter.getInstancedGeometry().bind();
+			emitter.getInstancedGeometry().update(emitter.getParticleCount());
+			emitter.getInstancedGeometry().render();
 			emitter.getInstancedGeometry().unbind();			
 			emitter.getTexture().unbind();			
 		}

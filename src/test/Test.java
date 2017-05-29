@@ -204,7 +204,7 @@ public class Test {
 			soundSystem.checkError();
 			music.update();
 			
-			//scene.render(camera, cameraPosition, world);
+			scene.render(camera, cameraPosition, world);
 			
 			particleRenderer.update(dt, cameraPosition);
 			particleRenderer.render();

@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import engine.networking.protocols.TCPMultiplexProtocolImplementation;
+import engine.networking.protocols.UDPMultiplexProtocolImplementation;
+
 public class Server extends Endpoint {
 
 	private ProtocolImplementation protocolImplementation;
@@ -16,7 +19,8 @@ public class Server extends Endpoint {
 	
 	private AtomicBoolean listening = new AtomicBoolean();
 	
-	private ArrayList<EndpointListener> listeners = new ArrayList<>();
+	private ArrayList<EndpointListener<?>> listeners = new ArrayList<>();
+	private ArrayList<Class<?>> listenerFilters = new ArrayList<>();
 	
 	public Server(Protocol protocol, String ip, int port) {
 		this.ip = ip;
@@ -31,32 +35,41 @@ public class Server extends Endpoint {
 		}
 	}
 	
-	public Server listen(EndpointListener listener) {
+	public <T> Server listen(Class<T> type, EndpointListener<T> listener) {
 		listeners.add(listener);
+		listenerFilters.add(type);
 		return this;
 	}
 	
 	public ClientInstance getCurrentInstance() {
 		return ((Multiplex) protocolImplementation).getCurrentInstance();
 	}
+
+	@SuppressWarnings("unchecked")
+	private <T> void sendObject(EndpointListener<?> listener, Class<T> type, Object object) {
+		((EndpointListener<T>) listener).onPacketReceived(type.cast(object), this, (o) -> {
+			try {
+				protocolImplementation.write(o);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
+	}
 	
 	public void start() {
 		thread = new Thread(() -> {
 			try {
-				protocolImplementation.connect(ip, port, Server.this);System.out.println("s-connected");
+				protocolImplementation.connect(ip, port, Server.this);
 				while (listening.get()) {
-					Object object = protocolImplementation.read();System.out.println("s-read");
+					Object object = protocolImplementation.read();
 					if (object == null) {
 						continue;
 					}
 					for (int i = 0; i < listeners.size(); i++) {
-						listeners.get(i).onPacketReceived(object, this, (o) -> {
-							try {
-								protocolImplementation.write(o);System.out.println("s-write");
-							} catch (IOException e) {
-								throw new RuntimeException(e);
-							}
-						});
+						Class<?> type = listenerFilters.get(i);
+						if (type.isAssignableFrom(object.getClass())) {
+							sendObject(listeners.get(i), type, object);
+						}
 					}
 				}
 			} catch (IOException e) {

@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import engine.networking.protocols.TCPSimplexProtocolImplementation;
+import engine.networking.protocols.UDPSimplexProtocolImplementation;
+
 public class Client extends Endpoint {
 	
 	private ProtocolImplementation protocolImplementation;
@@ -16,7 +19,8 @@ public class Client extends Endpoint {
 	
 	private AtomicBoolean listening = new AtomicBoolean();
 	
-	private ArrayList<EndpointListener> listeners = new ArrayList<>();
+	private ArrayList<EndpointListener<?>> listeners = new ArrayList<>();
+	private ArrayList<Class<?>> listenerFilters = new ArrayList<>();
 	
 	public Client(Protocol protocol, String ip, int port) {
 		this.ip = ip;
@@ -31,29 +35,38 @@ public class Client extends Endpoint {
 		}
 	}
 	
-	public Client listen(EndpointListener listener) {
+	public <T> Client listen(Class<T> type, EndpointListener<T> listener) {
 		listeners.add(listener);
+		listenerFilters.add(type);
 		return this;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <T> void sendObject(EndpointListener<?> listener, Class<T> type, Object object) {
+		((EndpointListener<T>) listener).onPacketReceived(type.cast(object), this, (o) -> {
+			try {
+				protocolImplementation.write(o);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
 	}
 	
 	public void start() {
 		thread = new Thread(() -> {
 			try {
-				protocolImplementation.connect(ip, port, Client.this);System.out.println("c-connected");
+				protocolImplementation.connect(ip, port, Client.this);
 				listening.set(true);
 				while (listening.get()) {
-					Object object = protocolImplementation.read();System.out.println("c-read");
+					Object object = protocolImplementation.read();
 					if (object == null) {
 						continue;
 					}
 					for (int i = 0; i < listeners.size(); i++) {
-						listeners.get(i).onPacketReceived(object, this, (o) -> {
-							try {
-								protocolImplementation.write(o);System.out.println("c-write");
-							} catch (IOException e) {
-								throw new RuntimeException(e);
-							}
-						});
+						Class<?> type = listenerFilters.get(i);
+						if (type.isAssignableFrom(object.getClass())) {
+							sendObject(listeners.get(i), type, object);
+						}
 					}
 				}
 			} catch (IOException e) {

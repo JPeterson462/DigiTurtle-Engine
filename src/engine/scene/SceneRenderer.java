@@ -6,6 +6,7 @@ import engine.Camera;
 import engine.CoreSettings;
 import engine.GraphicsSettings;
 import engine.rendering.Renderer;
+import engine.rendering.Texture;
 import engine.world.World;
 
 public class SceneRenderer {
@@ -39,6 +40,10 @@ public class SceneRenderer {
 		pipeline.doLightingPass(lightLevel, camera, world.getLights(), cameraPosition);
 		pipeline.doFXAAPass();
 		pipeline.doFinalRender();
+	}
+
+	public Texture getDepthTexture() {
+		return pipeline.getSceneDepthTexture();
 	}
 
 }

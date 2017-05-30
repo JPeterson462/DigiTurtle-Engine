@@ -2,6 +2,7 @@ package test;
 
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.lwjgl.opengl.GL11;
 
 import com.esotericsoftware.minlog.Log;
 
@@ -175,7 +176,7 @@ public class Test {
 			music.setLooping(true);
 			music.play();
 			
-			particleRenderer = new ParticleRenderer(renderer, camera);
+			particleRenderer = new ParticleRenderer(renderer, camera, new Vector2f(coreSettings.width, coreSettings.height));
 			ParticleEmitter emitter0 = new BasicParticleEmitter(camera, aTexture, new Vector3f(0, 5, -50), 0.001f, 5f, 0.4f, 10, 10, 0.1f, 0.1f, 0.1f, 0.1f, new int[] { 3, 3 });
 			particleRenderer.addEmitter(emitter0);
 		});
@@ -203,11 +204,13 @@ public class Test {
 			
 			soundSystem.checkError();
 			music.update();
-			
+
+			GL11.glDepthFunc(GL11.GL_LEQUAL);
+			particleRenderer.update(dt, cameraPosition);
 			scene.render(camera, cameraPosition, world);
 			
-			particleRenderer.update(dt, cameraPosition);
-			particleRenderer.render();
+			GL11.glDepthFunc(GL11.GL_ALWAYS);
+			particleRenderer.render(scene.getDepthTexture());
 			
 //			buffer.render();
 			

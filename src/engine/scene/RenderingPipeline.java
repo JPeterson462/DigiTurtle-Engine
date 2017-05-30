@@ -6,7 +6,9 @@ import java.util.HashMap;
 import org.joml.Vector3f;
 
 import engine.Camera;
+import engine.effects.ParticleRenderer;
 import engine.rendering.Geometry;
+import engine.rendering.Texture;
 import engine.world.Entity;
 import engine.world.Light;
 import engine.world.Material;
@@ -25,5 +27,7 @@ public interface RenderingPipeline {
 	public void doFXAAPass();
 	
 	public void doFinalRender();
+	
+	public Texture getSceneDepthTexture();
 
 }

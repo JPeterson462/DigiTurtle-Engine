@@ -1,27 +1,34 @@
-package engine.networking;
+package engine.networking.protocols;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-public class UDPMultiplexProtocolImplementation implements ProtocolImplementation, Multiplex {
+import engine.networking.ClientInstance;
+import engine.networking.Encoder;
+import engine.networking.Endpoint;
+import engine.networking.Multiplex;
+import engine.networking.ProtocolImplementation;
+
+public class TCPMultiplexProtocolImplementation implements ProtocolImplementation, Multiplex {
 
 	private Endpoint endpoint;
 
-	private DatagramChannel serverDatagramChannel;
+	private ServerSocketChannel serverSocketChannel;
 	
 	private Selector selector;
 	
 	private Iterator<SelectionKey> selectionKeyIterator;
 	
-	private DatagramChannel clientChannel;
+	private SocketChannel clientChannel;
 
 	private ByteBuffer intW = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN), intR = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN);
 	
@@ -32,15 +39,15 @@ public class UDPMultiplexProtocolImplementation implements ProtocolImplementatio
 	@Override
 	public void connect(String ip, int port, Endpoint endpoint) throws IOException {
 		this.endpoint = endpoint;
+		serverSocketChannel = ServerSocketChannel.open();
+		serverSocketChannel.configureBlocking(false);
+		serverSocketChannel.socket().bind(new InetSocketAddress(port));
 		selector = Selector.open();
-		serverDatagramChannel = selector.provider().openDatagramChannel();
-		serverDatagramChannel.socket().bind(new InetSocketAddress(port));
-		serverDatagramChannel.configureBlocking(false);
-		int ops = serverDatagramChannel.validOps();
-		serverDatagramChannel.register(selector, ops);
+		int ops = serverSocketChannel.validOps();
+		serverSocketChannel.register(selector, ops);
 		intW.limit(intW.capacity());
 		intR.limit(intR.capacity());
-		while (!serverDatagramChannel.isConnected()) {
+		while (!serverSocketChannel.isOpen()) {
 			// WAIT
 		}
 	}
@@ -74,20 +81,35 @@ public class UDPMultiplexProtocolImplementation implements ProtocolImplementatio
 		SelectionKey selectionKey = selectionKeyIterator.next();
 		if (selectionKey == null) {
 			return null;
-		}System.out.println("selection_key");
-		if (selectionKey.isReadable()) {
-			clientChannel = (DatagramChannel) selectionKey.channel();
+		}
+		if (selectionKey.isAcceptable()) {
+			SocketChannel clientChannel = serverSocketChannel.accept();
+			if (clientChannel == null) {
+				return null;
+			}
+			clientChannel.configureBlocking(false);
+			clientChannel.register(selector, SelectionKey.OP_READ);
+			int uid = ClientInstance.getUID(clientChannel);
+			connectedInstances.put(uid, new ClientInstance(uid));
+			return null;
+		}
+		else if (selectionKey.isReadable()) {
+			clientChannel = (SocketChannel) selectionKey.channel();
 			int length = readBlocking();
 			int id = readBlocking();
 			ByteBuffer buffer = ByteBuffer.allocate(length);
+			int read = 0;
 			buffer.limit(length);
-			clientChannel.receive(buffer);
-			buffer.flip();
-			if (!connectedInstances.containsKey(ClientInstance.getUID(clientChannel))) {
-				connectedInstances.put(ClientInstance.getUID(clientChannel), new ClientInstance(ClientInstance.getUID(clientChannel)));
+			while (buffer.hasRemaining()) {
+				buffer.position(read);
+				int perCall = clientChannel.read(buffer);
+				if (perCall < 0) {
+					break;
+				}
+				read += perCall;
 			}
+			buffer.flip();
 			currentInstance = connectedInstances.get(ClientInstance.getUID(clientChannel));
-			selectionKey.interestOps(SelectionKey.OP_WRITE);
 			return endpoint.getDecoder(id).decode(buffer);
 		}
 		selectionKeyIterator.remove();
@@ -96,13 +118,19 @@ public class UDPMultiplexProtocolImplementation implements ProtocolImplementatio
 
 	private int readBlocking() throws IOException {
 		intR.position(0);
-		clientChannel.receive(intR);
-		return intR.getInt(0);
+		int bytesRead = clientChannel.read(intR);
+		while (bytesRead < 4) {
+			intR.position(bytesRead);
+			bytesRead += clientChannel.read(intR);
+		}
+		intR.flip();
+		int value = intR.getInt(0);
+		return value;
 	}
 
 	@Override
 	public void disconnect() throws IOException {
-		serverDatagramChannel.close();
+		serverSocketChannel.close();
 	}
 	
 	@Override

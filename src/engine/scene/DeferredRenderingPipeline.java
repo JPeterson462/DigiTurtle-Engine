@@ -13,6 +13,7 @@ import org.joml.Vector4f;
 import engine.Camera;
 import engine.CoreSettings;
 import engine.GraphicsSettings;
+import engine.effects.ParticleRenderer;
 import engine.rendering.BlendMode;
 import engine.rendering.Framebuffer;
 import engine.rendering.Geometry;
@@ -399,7 +400,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		lightingFullscreenPass.unbind();
 		lightingShader.unbind();
 	}
-	
+
 	@Override
 	public void doFXAAPass() {
 		postProcessingPass.bind();
@@ -420,6 +421,11 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 //		GL11.glTexCoord2f(1, 1); GL11.glVertex2f(1, 1);
 //		GL11.glTexCoord2f(0, 1); GL11.glVertex2f(-1, 1);
 //		GL11.glEnd();
+	}
+
+	@Override
+	public Texture getSceneDepthTexture() {
+		return geometryPass.getDepthTexture();
 	}
 
 }

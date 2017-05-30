@@ -3,12 +3,14 @@ package engine.effects;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import engine.Camera;
 import engine.rendering.BlendMode;
 import engine.rendering.Renderer;
 import engine.rendering.Shader;
+import engine.rendering.Texture;
 
 public class ParticleRenderer {
 	
@@ -18,7 +20,7 @@ public class ParticleRenderer {
 	
 	private ArrayList<ParticleEmitter> emitters = new ArrayList<>();
 	
-	public ParticleRenderer(Renderer renderer, Camera camera) {
+	public ParticleRenderer(Renderer renderer, Camera camera, Vector2f windowSize) {
 		this.renderer = renderer;
 		HashMap<Integer, String> attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
@@ -29,6 +31,8 @@ public class ParticleRenderer {
 		shader.bind();
 		shader.uploadMatrix(shader.getUniformLocation("projectionMatrix"), camera.getProjectionMatrix());
 		shader.uploadInteger(shader.getUniformLocation("texture"), 0);
+		shader.uploadInteger(shader.getUniformLocation("sceneDepthTexture"), 1);
+		shader.uploadVector(shader.getUniformLocation("windowSize"), windowSize);
 	}
 	
 	public void update(float delta, Vector3f cameraPosition) {
@@ -37,8 +41,10 @@ public class ParticleRenderer {
 		}
 	}
 	
-	public void render() {
+	public void render(Texture sceneDepth) {
 		shader.bind();
+		sceneDepth.activeTexture(1);
+		sceneDepth.bind();
 		for (int i = 0; i < emitters.size(); i++) {
 			ParticleEmitter emitter = emitters.get(i);
 			shader.uploadVector(shader.getUniformLocation("textureAtlasSize"), emitter.getAtlasSize());

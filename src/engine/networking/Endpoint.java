@@ -29,6 +29,9 @@ public abstract class Endpoint {
 	
 	@SuppressWarnings("unchecked")
 	public <T> Decoder<T> getDecoder(Class<T> type) {
+		while (!decoders.containsKey(type)) {
+			type = (Class<T>) type.getSuperclass();
+		}
 		return (Decoder<T>) decoders.get(type);
 	}
 	
@@ -40,6 +43,9 @@ public abstract class Endpoint {
 	
 	@SuppressWarnings("unchecked")
 	public <T> Encoder<T> getEncoder(Class<T> type) {
+		while (!encoders.containsKey(type)) {
+			type = (Class<T>) type.getSuperclass();
+		}
 		return (Encoder<T>) encoders.get(type);
 	}
 	

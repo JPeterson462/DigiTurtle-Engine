@@ -8,8 +8,7 @@ public class StringCoder implements Coder<String> {
 
 	@Override
 	public String decode(ByteBuffer buffer) {
-		buffer.rewind();
-		byte[] data = new byte[buffer.limit()];
+		byte[] data = new byte[buffer.limit() - buffer.position()];
 		buffer.get(data);
 		return new String(data);
 	}

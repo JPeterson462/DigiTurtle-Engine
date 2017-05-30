@@ -1,31 +1,31 @@
-package engine.networking;
+package engine.networking.protocols;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.DatagramChannel;
+import java.nio.channels.SocketChannel;
 
-public class UDPSimplexProtocolImplementation implements ProtocolImplementation {
+import engine.networking.Encoder;
+import engine.networking.Endpoint;
+import engine.networking.ProtocolImplementation;
 
+public class TCPSimplexProtocolImplementation implements ProtocolImplementation {
+	
 	private Endpoint endpoint;
 
-	private DatagramChannel datagramChannel;
+	private SocketChannel socketChannel;
 
 	private ByteBuffer intW = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN), intR = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN);
-	
-	private SocketAddress remote;
 	
 	@Override
 	public void connect(String ip, int port, Endpoint endpoint) throws IOException {
 		this.endpoint = endpoint;
-		datagramChannel = DatagramChannel.open();
-		datagramChannel.connect(remote = new InetSocketAddress(ip, port));
-		datagramChannel.configureBlocking(false);
+		socketChannel = SocketChannel.open();
+		socketChannel.connect(new InetSocketAddress(ip, port));
 		intW.limit(intW.capacity());
 		intR.limit(intR.capacity());
-		while (!datagramChannel.isConnected()) {
+		while (!socketChannel.isConnected()) {
 			// WAIT
 		}
 	}
@@ -37,33 +37,51 @@ public class UDPSimplexProtocolImplementation implements ProtocolImplementation 
 		ByteBuffer buffer = encoder.encode(object);
 		intW.position(0);
 		intW.putInt(0, buffer.limit());
-		datagramChannel.send(intW, remote);
+		while (intW.hasRemaining()) {
+			socketChannel.write(intW);
+		}
 		intW.position(0);
 		intW.putInt(0, endpoint.getRegistry().lookup(object.getClass()));
-		datagramChannel.send(intW, remote);
-		datagramChannel.send(buffer, remote);
+		while (intW.hasRemaining()) {
+			socketChannel.write(intW);
+		}
+		while (buffer.hasRemaining()) {
+			socketChannel.write(buffer);
+		}
 	}
 
 	@Override
-	public Object read() throws IOException {System.out.println("start");
-		int length = readBlocking();System.out.println("length");
-		int id = readBlocking();System.out.println("id");
+	public Object read() throws IOException {
+		int length = readBlocking();
+		int id = readBlocking();
 		ByteBuffer buffer = ByteBuffer.allocate(length);
+		int read = 0;
 		buffer.limit(length);
-		datagramChannel.read(buffer);System.out.println("read");
+		while (read < length) {
+			buffer.position(read);
+			int perCall = socketChannel.read(buffer);
+			if (perCall < 0) {
+				break;
+			}
+			read += perCall;
+		}
 		buffer.limit(buffer.position());
 		return endpoint.getDecoder(id).decode(buffer);
 	}
 	
 	private int readBlocking() throws IOException {
 		intR.position(0);
-		datagramChannel.receive(intR);System.out.println(intR);
+		int bytesRead = socketChannel.read(intR);
+		while (bytesRead < 4) {
+			intR.position(bytesRead);
+			bytesRead += socketChannel.read(intR);
+		}
 		return intR.getInt(0);
 	}
 
 	@Override
 	public void disconnect() throws IOException {
-		datagramChannel.close();
+		socketChannel.close();
 	}
 
 }

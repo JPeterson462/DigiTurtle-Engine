@@ -53,11 +53,13 @@
 	- Started instanced rendering
 5/28/17:
 	- NIO TCP Networking
+5/29/17:
+	- NIO UDP Networking
+	- Get/Post REST Interface
+	- JSON Parser
 
 https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
 
--- Copy depth texture from scene to default depth buffer
-	
 TIMELINE
 	1. Terrain
 *		- Rendering
@@ -92,10 +94,11 @@ TIMELINE
 		- Terrain, Navigation Mesh
 		- Collision
 		- Optimization
-	18. Networking
-		- NIO
+*	18. Networking
+*		- NIO
 *			- TCP
-			- UDP
+*			- UDP
+*		- REST
 *		- Encoding/Decoding Traffic
 	19. User Interface
 *	20. Input Processing

@@ -57,6 +57,9 @@
 	- NIO UDP Networking
 	- Get/Post REST Interface
 	- JSON Parser
+5/30/17:
+	- Fixed instance rendering
+	- Need to fix FirstPersonCamera
 
 https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
 
@@ -71,7 +74,7 @@ TIMELINE
 		- Fix FXAA (Faster and better)
 	3. Shadows
 		- Percentage Closer Filtering
-	4. Instanced Geometry
+*	4. Instanced Geometry
 		- Particle Effects
 *	5. Window Icons
 	6. Lighting

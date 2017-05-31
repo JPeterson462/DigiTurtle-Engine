@@ -210,6 +210,7 @@ public class GLRenderer implements Renderer {
 				GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);
 				break;
 		}
+		current = mode;
 	}
 	
 }

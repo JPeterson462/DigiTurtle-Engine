@@ -38,7 +38,7 @@ public class GLGeometryUtils {
 			size += 3;
 		}
 		if ((flags & Vertex.POSITION2D_BIT) != 0) {
-			size += 3;
+			size += 2;
 		}
 		if ((flags & Vertex.TEXTURE_COORD_BIT) != 0) {
 			size += 2;

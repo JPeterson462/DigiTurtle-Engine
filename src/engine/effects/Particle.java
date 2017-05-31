@@ -32,7 +32,7 @@ public class Particle implements Comparable<Particle> {
 	public Particle(Camera camera, Vector3f position, Vector3f velocity, float gravityEffect, float lifeLength, float rotation, float scale, int[] frames) {
 		particleTemplate = new ParticleTemplate();
 		particleTemplate.setCamera(camera);
-		this.position = position;
+		this.position = new Vector3f(position);
 		this.velocity = velocity;
 		this.gravityEffect = gravityEffect;
 		this.lifeLength = lifeLength;

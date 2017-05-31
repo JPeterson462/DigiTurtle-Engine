@@ -177,10 +177,10 @@ public class Test {
 			music.play();
 			
 			particleRenderer = new ParticleRenderer(renderer, camera, new Vector2f(coreSettings.width, coreSettings.height));
-			ParticleEmitter emitter0 = new BasicParticleEmitter(camera, aTexture, new Vector3f(0, 5, -50), 0.001f, 5f, 0.4f, 10, 10, 0.1f, 0.1f, 0.1f, 0.1f, new int[] { 3, 3 });
+			ParticleEmitter emitter0 = new BasicParticleEmitter(camera, aTexture, new Vector3f(0, 5, -10), 0.01f, 5f, 0.4f, 2, 10, 3f, 0.1f, 2f, 0.1f, new int[] { 3, 3 });
 			particleRenderer.addEmitter(emitter0);
 		});
-		while (renderer.validContext()) {
+		while (renderer.validContext()) {			
 			float dt = renderer.getDeltaTime();
 			renderer.prepareContext();
 			
@@ -196,9 +196,14 @@ public class Test {
 //			spotLight.setDirection(v);
 			
 			float height = 5;
-			cameraPosition.set(0, height, dist);
-//			cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)) + 5, dist, dist * (float) Math.sin(Math.toRadians(t)) + 5);
-			camera.getViewMatrix().setLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0, height, 0, 0, 1, 0);
+//			cameraPosition.set(0, height, dist);
+			cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)), dist, dist * (float) Math.sin(Math.toRadians(t)));
+			camera.setPosition(cameraPosition);
+//			camera.setYaw((float) t);
+//			camera.setYaw(180);
+			camera.lookAt(new Vector3f(0, height, 0));
+			camera.update();
+//			camera.getViewMatrix().setLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0, height, 0, 0, 1, 0);
 			
 			entity.update(dt);
 			

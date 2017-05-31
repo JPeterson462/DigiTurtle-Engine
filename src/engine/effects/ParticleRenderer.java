@@ -48,15 +48,15 @@ public class ParticleRenderer {
 		for (int i = 0; i < emitters.size(); i++) {
 			ParticleEmitter emitter = emitters.get(i);
 			shader.uploadVector(shader.getUniformLocation("textureAtlasSize"), emitter.getAtlasSize());
-			emitter.getTexture().activeTexture(0);
-			emitter.getTexture().bind();
 			renderer.setBlendMode(emitter.getBlendMode());
 			emitter.store(emitter.getInstancedGeometry(), emitter.getMaxParticles());
 			emitter.getInstancedGeometry().bind();
 			emitter.getInstancedGeometry().update(emitter.getParticleCount());
+			emitter.getTexture().activeTexture(0);
+			emitter.getTexture().bind();
 			emitter.getInstancedGeometry().render();
-			emitter.getInstancedGeometry().unbind();			
 			emitter.getTexture().unbind();			
+			emitter.getInstancedGeometry().unbind();			
 		}
 		renderer.setBlendMode(BlendMode.DEFAULT);
 		shader.unbind();

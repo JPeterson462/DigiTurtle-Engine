@@ -151,13 +151,15 @@ public class GLInstancedGeometry<T extends InstanceTemplate> implements Instance
 	public void update(int instanceCount) {
 		if (updateInstances) {
 			this.instanceCount = instanceCount;
-			int bufferSize = 0;
 			instanceBuffer.limit(instanceBuffer.capacity());
+			instanceBuffer.position(0);
+			int size = 0;
 			for (int i = 0; i < instanceCount; i++) {
 				instances[i].uploadInstance(instanceBuffer, instances[i].getInstanceSize() * i);
-				bufferSize += instances[i].getInstanceSize();
+				size += instances[i].getInstanceSize();
 			}
-			instanceBuffer.limit(bufferSize);
+			instanceBuffer.limit(size);
+			instanceBuffer.position(0);
 			if (instanceCount == 0) {
 				return;
 			}

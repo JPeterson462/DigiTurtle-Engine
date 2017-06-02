@@ -2,9 +2,11 @@ package engine.world;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import engine.rendering.Geometry;
 import engine.scene.MeshComponent;
+import utils.Receiver;
 
 public class World {
 
@@ -28,6 +30,45 @@ public class World {
 		this.resolution = resolution;
 		terrain = new TerrainChunk[width][height];
 	}
+	
+	public void forEachEntity(Receiver<Entity> receiver) {
+		for (Map.Entry<Geometry, HashMap<Material, ArrayList<Entity>>> entityGroup : defaultEntities.entrySet()) {
+			HashMap<Material, ArrayList<Entity>> entitySubgroup = entityGroup.getValue();
+			for (Map.Entry<Material, ArrayList<Entity>> entityList : entitySubgroup.entrySet()) {
+				ArrayList<Entity> list = entityList.getValue();
+				for (int i = 0; i < list.size(); i++) {
+					receiver.receive(list.get(i));
+				}
+			}
+		}
+		for (Map.Entry<Geometry, HashMap<Material, ArrayList<Entity>>> entityGroup : normalMappedEntities.entrySet()) {
+			HashMap<Material, ArrayList<Entity>> entitySubgroup = entityGroup.getValue();
+			for (Map.Entry<Material, ArrayList<Entity>> entityList : entitySubgroup.entrySet()) {
+				ArrayList<Entity> list = entityList.getValue();
+				for (int i = 0; i < list.size(); i++) {
+					receiver.receive(list.get(i));
+				}
+			}
+		}
+		for (Map.Entry<Geometry, HashMap<Material, ArrayList<Entity>>> entityGroup : defaultSkeletalEntities.entrySet()) {
+			HashMap<Material, ArrayList<Entity>> entitySubgroup = entityGroup.getValue();
+			for (Map.Entry<Material, ArrayList<Entity>> entityList : entitySubgroup.entrySet()) {
+				ArrayList<Entity> list = entityList.getValue();
+				for (int i = 0; i < list.size(); i++) {
+					receiver.receive(list.get(i));
+				}
+			}
+		}
+		for (Map.Entry<Geometry, HashMap<Material, ArrayList<Entity>>> entityGroup : normalMappedSkeletalEntities.entrySet()) {
+			HashMap<Material, ArrayList<Entity>> entitySubgroup = entityGroup.getValue();
+			for (Map.Entry<Material, ArrayList<Entity>> entityList : entitySubgroup.entrySet()) {
+				ArrayList<Entity> list = entityList.getValue();
+				for (int i = 0; i < list.size(); i++) {
+					receiver.receive(list.get(i));
+				}
+			}
+		}
+	}
 
 	public void setTerrain(int i, int j, TerrainGenerator generator, TerrainTexturePack texturePack) {
 		float x = i * width - (terrain.length * width) / 2;
@@ -49,6 +90,7 @@ public class World {
 	}
 	
 	public void addEntity(Entity entity) {
+		entity.setWorld(this);
 		MeshComponent meshComponent = entity.getComponent(MeshComponent.class);
 		if ((meshComponent.getFlags() & Component.NORMAL_MAPPED_BIT) != 0) {
 			if ((meshComponent.getFlags() & Component.SKELETAL_BIT) != 0) {
@@ -96,6 +138,7 @@ public class World {
 	}
 
 	public boolean removeEntity(Entity entity) {
+		entity.setWorld(null);
 		MeshComponent meshComponent = entity.getComponent(MeshComponent.class);
 		if ((meshComponent.getFlags() & Component.NORMAL_MAPPED_BIT) != 0) {
 			if ((meshComponent.getFlags() & Component.SKELETAL_BIT) != 0) {
@@ -156,6 +199,10 @@ public class World {
 
 	public ArrayList<Light> getLights() {
 		return lights;
+	}
+	
+	public void update(float dt) {
+		forEachEntity((entity) -> entity.update(dt));
 	}
 
 }

@@ -1,12 +1,14 @@
 package engine.world.physics;
 
+import java.util.ArrayList;
+
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import engine.world.Component;
 import engine.world.Entity;
 
-public class PhysicalComponent implements Component {
+public abstract class PhysicalComponent implements Component {
 	
 	private Vector3f position, velocity, acceleration, angularVelocity, angularAcceleration;
 	
@@ -28,6 +30,14 @@ public class PhysicalComponent implements Component {
 		bounds.setAccessors(() -> position, () -> orientation);
 	}
 	
+	public Bounds getBounds() {
+		return bounds;
+	}
+	
+	public float getMass() {
+		return mass;
+	}
+	
 	public void setVelocity(Vector3f velocity, Vector3f angularVelocity) {
 		this.velocity.set(velocity);
 		this.angularVelocity.set(angularVelocity);
@@ -45,13 +55,57 @@ public class PhysicalComponent implements Component {
 
 	@Override
 	public void update(Entity entity, float delta) {
-		// collision detection TODO
+		orientation.set(entity.getOrientation());
+		position.set(entity.getPosition());
 		velocity.fma(delta, acceleration);
 		position.fma(delta, velocity);
 		angularVelocity.fma(delta, angularAcceleration);
-		orientation.integrate(delta, angularVelocity.x, angularVelocity.y, angularVelocity.z);		
+		orientation.integrate(delta, angularVelocity.x, angularVelocity.y, angularVelocity.z);
 		entity.setPosition(position);
 		entity.setOrientation(orientation);
+		ArrayList<Entity> collided = new ArrayList<>();
+		entity.getWorld().forEachEntity((other) -> {
+			PhysicalComponent otherPhysical = other.getComponent(PhysicalComponent.class);
+			if (otherPhysical == null) {
+				return;
+			}
+			if (other != entity) {
+				if (getBounds().overlaps(otherPhysical.getBounds())) {
+					collided.add(other);
+				}
+			}
+		});
+		for (int i = 0; i < collided.size(); i++) {
+			collided.get(i).getComponent(PhysicalComponent.class).onCollision(entity);
+			onCollision(collided.get(i));
+		}
+		Vector3f tmpVector = new Vector3f();
+		for (int i = 0; i < collided.size(); i++) {
+			Entity other = collided.get(i);
+			PhysicalComponent physicalComponent = other.getComponent(PhysicalComponent.class);
+			Vector3f overlap = getBounds().getOverlap(physicalComponent.getBounds()); // Overlap of A to B
+			if (overlap != null) {System.out.println(overlap);
+				if (mass == Float.MAX_VALUE) {
+					if (physicalComponent.mass != Float.MAX_VALUE) {
+						tmpVector.set(overlap).negate().add(other.getPosition());
+						other.setPosition(tmpVector);
+					}
+				} else {
+					if (physicalComponent.mass == Float.MAX_VALUE) {
+						tmpVector.set(overlap).add(entity.getPosition());
+						entity.setPosition(tmpVector);
+					} else {
+						float massRatio = mass / (mass + physicalComponent.mass);
+						tmpVector.set(overlap).mul(massRatio).add(entity.getPosition());
+						entity.setPosition(tmpVector);
+						tmpVector.set(overlap).negate().mul(1f - massRatio).add(other.getPosition());
+						other.setPosition(tmpVector);						
+					}
+				}
+			}
+		}
 	}
+	
+	public abstract void onCollision(Entity other);
 
 }

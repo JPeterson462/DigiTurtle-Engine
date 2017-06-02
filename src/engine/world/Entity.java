@@ -19,9 +19,27 @@ public class Entity {
 	private Quaternionf orientation = new Quaternionf();
 	
 	private HashMap<Class<? extends Component>, Component> components = new HashMap<>();
+	
+	private World world;
+	
+	public void setWorld(World world) {
+		this.world = world;
+	}
+	
+	public World getWorld() {
+		return world;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Class<? extends Component> getComponentClass(Class<? extends Component> type) {
+		while (!type.getSuperclass().equals(Object.class)) {
+			type = (Class<? extends Component>) type.getSuperclass();
+		}
+		return type;
+	}
 
 	public void addComponent(Component component) {
-		Class<? extends Component> type = component.getClass();
+		Class<? extends Component> type = getComponentClass(component.getClass());
 		if (components.containsKey(type)) {
 			throw new IllegalArgumentException("Attempted to add duplicate component.");
 		}

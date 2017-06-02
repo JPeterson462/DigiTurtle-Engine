@@ -62,6 +62,8 @@
 	- Need to fix FirstPersonCamera
 5/31/17:
 	- Started physics engine
+6/1/17:
+	- Started collision detection and resolution (still needs to be fixed (invalid overlap))
 
 https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
 
@@ -99,6 +101,7 @@ TIMELINE
 		- Terrain, Navigation Mesh
 		- Collision
 		- Optimization
+		- Polyhedron Generator
 *	18. Networking
 *		- NIO
 *			- TCP

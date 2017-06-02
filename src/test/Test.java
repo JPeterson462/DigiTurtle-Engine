@@ -1,5 +1,6 @@
 package test;
 
+import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
@@ -38,6 +39,9 @@ import engine.world.SpotLight;
 import engine.world.TerrainGenerator;
 import engine.world.TerrainTexturePack;
 import engine.world.World;
+import engine.world.physics.PhysicalComponent;
+import engine.world.physics.PolyhedronBounds;
+import engine.world.physics.PolyhedronBuilder;
 import library.audio.AudioData;
 import library.audio.AudioDecoderLibrary;
 import library.audio.AudioStream;
@@ -117,6 +121,28 @@ public class Test {
 			entity.setPosition(new Vector3f(0, 0, 0));
 //			entity.addComponent(mesh);
 //			scene.addEntity(entity);
+
+			world = new World(2000, 2000, 10, 2, 2);
+			
+			PolyhedronBuilder builder = new PolyhedronBuilder();
+			
+			Texture crateDiffuse = renderer.createTexture(new AssetInputStream("crate.png"), false);
+			Material crateMaterial = new Material();
+			crateMaterial.setDiffuseTexture(crateDiffuse);
+			Model crateModel = ModelImporterLibrary.findImporter("obj").importModel(new AssetInputStream("crate.obj"), null, renderer);
+			crateModel.getMeshes().get(0).setMaterial(crateMaterial);
+			Entity crate = new Entity();
+			crate.setScale(new Vector3f(0.05f));
+			crate.setPosition(new Vector3f(10, 0, 10));
+			crate.addComponent(new MeshComponent(crateModel, renderer, false));
+			crate.addComponent(new PhysicalComponent(crate.getPosition(), crate.getOrientation(), 5, new PolyhedronBounds(builder.buildCube(10))) {
+				@Override
+				public void onCollision(Entity other) {
+					System.out.println("Collision into " + other);
+				}
+			});
+			crate.getComponent(PhysicalComponent.class).setVelocity(new Vector3f(-1, 0, -1), new Vector3f(0, 0, 0));
+			world.addEntity(crate);
 			
 			Model model = ModelImporterLibrary.findImporter("dae").importModel(new AssetInputStream("model.dae"), "Armature", renderer);
 			model.getMeshes().get(0).setMaterial(material);
@@ -130,8 +156,13 @@ public class Test {
 			entity.addComponent(new SkeletonComponent(model));
 			entity.addComponent(new AnimationComponent());
 			entity.getComponent(AnimationComponent.class).doAnimation(animation);
-			
-			world = new World(2000, 2000, 10, 2, 2);
+			entity.setOrientation(new Quaternionf().rotateY((float) Math.PI * 0.25f));
+			entity.addComponent(new PhysicalComponent(entity.getPosition(), entity.getOrientation(), Float.MAX_VALUE, new PolyhedronBounds(builder.buildCube(5))) {
+				@Override
+				public void onCollision(Entity other) {
+					System.out.println("Collision into " + other);
+				}
+			});
 			
 			world.addEntity(entity);
 			
@@ -197,15 +228,18 @@ public class Test {
 			
 			float height = 5;
 //			cameraPosition.set(0, height, dist);
-			cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)), dist, dist * (float) Math.sin(Math.toRadians(t)));
+			cameraPosition.set(40, 40, 40);
+			//cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)), dist, dist * (float) Math.sin(Math.toRadians(t)));
 			camera.setPosition(cameraPosition);
-//			camera.setYaw((float) t);
+			camera.setYaw(-45);
+			camera.setPitch(15);
+			//camera.setYaw((float) t);
 //			camera.setYaw(180);
-			camera.lookAt(new Vector3f(0, height, 0));
+			//camera.lookAt(new Vector3f(0, height, 0));
 			camera.update();
 //			camera.getViewMatrix().setLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0, height, 0, 0, 1, 0);
 			
-			entity.update(dt);
+			world.update(dt);
 			
 			soundSystem.checkError();
 			music.update();

@@ -81,4 +81,12 @@ public class TerrainChunk {
 		return texturePack;
 	}
 
+	public ArrayList<Vertex> getVertices() {
+		return vertices;
+	}
+
+	public ArrayList<Integer> getIndices() {
+		return indices;
+	}
+
 }

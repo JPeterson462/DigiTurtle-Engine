@@ -2,8 +2,6 @@ package library.models;
 
 import java.util.ArrayList;
 
-import engine.world.Material;
-
 public class Mesh {
 
 	private ArrayList<Vertex> vertices;

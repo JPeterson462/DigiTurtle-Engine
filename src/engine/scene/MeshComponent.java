@@ -38,7 +38,14 @@ public class MeshComponent implements Component {
 				geometry.add(renderer.createGeometry(convertVertices(mesh.getVertices(), false), mesh.getIndices(),
 						Vertex.POSITION_BIT | Vertex.TEXTURE_COORD_BIT | Vertex.NORMAL_BIT));
 			}
-			materials.add(mesh.getMaterial());
+			Material material = new Material();
+			material.setDiffuseTexture(renderer.createTexture(mesh.getMaterial().getDiffuseTexture(), true));
+			if (mesh.getMaterial().getNormalTexture() != null) {
+				material.setNormalTexture(renderer.createTexture(mesh.getMaterial().getNormalTexture(), false));
+			}
+			material.setReflectivity(mesh.getMaterial().getReflectivity());
+			material.setShineDamper(mesh.getMaterial().getShineDamper());
+			materials.add(material);
 		}
 	}
 

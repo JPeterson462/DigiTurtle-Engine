@@ -33,7 +33,7 @@ import engine.text.TextRenderer;
 import engine.text.opengl.GLTextRenderer;
 import engine.world.AmbientLight;
 import engine.world.Entity;
-import engine.world.Material;
+import engine.world.EntityTag;
 import engine.world.PointLight;
 import engine.world.SpotLight;
 import engine.world.TerrainGenerator;
@@ -49,6 +49,7 @@ import library.font.Font;
 import library.font.FontImporterLibrary;
 import library.models.Animation;
 import library.models.AnimationImporterLibrary;
+import library.models.Material;
 import library.models.Model;
 import library.models.ModelImporterLibrary;
 import utils.OpenSimplexNoise;
@@ -103,12 +104,12 @@ public class Test {
 			buffer.setText("Hello\t\t\tWorld\nHello,\t\tTest");
 			buffer.setEffect(TextEffects.newOutlineEffect(new Vector3f(1, 1, 1), new Vector3f(1, 0, 0), 0.5f, 0.7f));
 			
-			texture = renderer.createTexture(new AssetInputStream("animatedDiffuse.png"), false);
+//			texture = renderer.createTexture(new AssetInputStream("animatedDiffuse.png"), false);
 //			texture = renderer.createTexture(new AssetInputStream("crate.png"), false);
 			Texture texture2 = renderer.createTexture(new AssetInputStream("crateNormal.png"), false);
 			
 			Material material = new Material();
-			material.setDiffuseTexture(texture);
+			material.setDiffuseTexture(new AssetInputStream("animatedDiffuse.png"));
 //			material.setNormalTexture(texture2);
 			camera = new FirstPersonCamera(coreSettings, graphicsSettings);
 			scene = new SceneRenderer(renderer, RenderingStrategy.DEFERRED, coreSettings, graphicsSettings);
@@ -126,10 +127,10 @@ public class Test {
 			
 			PolyhedronBuilder builder = new PolyhedronBuilder();
 			
-			Texture crateDiffuse = renderer.createTexture(new AssetInputStream("crate.png"), false);
+//			Texture crateDiffuse = renderer.createTexture(new AssetInputStream("crate.png"), false);
 			Material crateMaterial = new Material();
-			crateMaterial.setDiffuseTexture(crateDiffuse);
-			Model crateModel = ModelImporterLibrary.findImporter("obj").importModel(new AssetInputStream("crate.obj"), null, renderer);
+			crateMaterial.setDiffuseTexture(new AssetInputStream("crate.png"));
+			Model crateModel = ModelImporterLibrary.findImporter("obj").importModel(new AssetInputStream("crate.obj"), null, renderer, (path) -> new AssetInputStream(path));
 			crateModel.getMeshes().get(0).setMaterial(crateMaterial);
 			Entity crate = new Entity();
 			crate.setScale(new Vector3f(0.05f));
@@ -138,13 +139,13 @@ public class Test {
 			crate.addComponent(new PhysicalComponent(crate.getPosition(), crate.getOrientation(), 5, new PolyhedronBounds(builder.buildCube(10))) {
 				@Override
 				public void onCollision(Entity other) {
-					System.out.println("Collision into " + other);
+					
 				}
 			});
 			crate.getComponent(PhysicalComponent.class).setVelocity(new Vector3f(-1, 0, -1), new Vector3f(0, 0, 0));
 			world.addEntity(crate);
 			
-			Model model = ModelImporterLibrary.findImporter("dae").importModel(new AssetInputStream("model.dae"), "Armature", renderer);
+			Model model = ModelImporterLibrary.findImporter("dae").importModel(new AssetInputStream("model.dae"), "Armature", renderer, (path) -> new AssetInputStream(path));
 			model.getMeshes().get(0).setMaterial(material);
 			Animation animation = AnimationImporterLibrary.findImporter("dae").importAnimation(new AssetInputStream("model.dae"), "Armature");
 			
@@ -157,7 +158,7 @@ public class Test {
 			entity.addComponent(new AnimationComponent());
 			entity.getComponent(AnimationComponent.class).doAnimation(animation);
 			entity.setOrientation(new Quaternionf().rotateY((float) Math.PI * 0.25f));
-			entity.addComponent(new PhysicalComponent(entity.getPosition(), entity.getOrientation(), Float.MAX_VALUE, new PolyhedronBounds(builder.buildCube(5))) {
+			entity.addComponent(new PhysicalComponent(entity.getPosition(), entity.getOrientation(), Float.MAX_VALUE, new PolyhedronBounds(builder.buildCube(4))) {
 				@Override
 				public void onCollision(Entity other) {
 					System.out.println("Collision into " + other);
@@ -248,8 +249,8 @@ public class Test {
 			particleRenderer.update(dt, cameraPosition);
 			scene.render(camera, cameraPosition, world);
 			
-			GL11.glDepthFunc(GL11.GL_ALWAYS);
-			particleRenderer.render(scene.getDepthTexture());
+			//GL11.glDepthFunc(GL11.GL_ALWAYS);
+			//particleRenderer.render(scene.getDepthTexture());
 			
 //			buffer.render();
 			

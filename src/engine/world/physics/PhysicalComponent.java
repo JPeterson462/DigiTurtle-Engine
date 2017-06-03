@@ -83,8 +83,8 @@ public abstract class PhysicalComponent implements Component {
 		for (int i = 0; i < collided.size(); i++) {
 			Entity other = collided.get(i);
 			PhysicalComponent physicalComponent = other.getComponent(PhysicalComponent.class);
-			Vector3f overlap = getBounds().getOverlap(physicalComponent.getBounds()); // Overlap of A to B
-			if (overlap != null) {System.out.println(overlap);
+			Vector3f overlap = getBounds().getOverlap(physicalComponent.getBounds()).negate(); // Overlap of A to B
+			if (overlap != null) {
 				if (mass == Float.MAX_VALUE) {
 					if (physicalComponent.mass != Float.MAX_VALUE) {
 						tmpVector.set(overlap).negate().add(other.getPosition());

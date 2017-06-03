@@ -64,6 +64,10 @@
 	- Started physics engine
 6/1/17:
 	- Started collision detection and resolution (still needs to be fixed (invalid overlap))
+6/2/17:
+	- Fixed collision detection and resolution
+	- Added an entity tagging system
+	- Updated LWJGL
 
 https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
 
@@ -85,6 +89,7 @@ TIMELINE
 		- Fix lighting calculations
 		- Materials
 		- Fix Cone Light Range
+		- Occlusion calculations
 		- Project Lighting (i.e. Position) with View Matrix
 	7. Decal and Transparency Passes
 	8. Controller Input
@@ -97,11 +102,11 @@ TIMELINE
 	14. Post Processing Effects
 	15. Fix Assimp Importer
 	16. Fix MD5 Importer
-	17. Physics Engine
-		- Terrain, Navigation Mesh
-		- Collision
-		- Optimization
-		- Polyhedron Generator
+*	17. Physics Engine
+*		- Terrain, Navigation Mesh
+*		- Collision
+*		- Optimization
+-		- Polyhedron Generator (Collection of Cuboids)
 *	18. Networking
 *		- NIO
 *			- TCP

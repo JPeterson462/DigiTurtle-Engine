@@ -20,7 +20,29 @@ public class Entity {
 	
 	private HashMap<Class<? extends Component>, Component> components = new HashMap<>();
 	
+	private HashMap<Integer, EntityTag> tags = new HashMap<>();
+	
 	private World world;
+	
+	public void addTag(EntityTag tag) {
+		tags.put(tag.getID(), tag);
+	}
+	
+	public boolean hasTag(int id) {
+		return tags.containsKey(id);
+	}
+	
+	public boolean hasTag(EntityTag tag) {
+		return tags.containsKey(tag.getID());
+	}
+	
+	public void removeTag(int id) {
+		tags.remove(id);
+	}
+	
+	public void removeTag(EntityTag tag) {
+		tags.remove(tag.getID());
+	}
 	
 	public void setWorld(World world) {
 		this.world = world;
@@ -32,7 +54,7 @@ public class Entity {
 	
 	@SuppressWarnings("unchecked")
 	private Class<? extends Component> getComponentClass(Class<? extends Component> type) {
-		while (!type.getSuperclass().equals(Object.class)) {
+		while (type.getName().contains("$")) {
 			type = (Class<? extends Component>) type.getSuperclass();
 		}
 		return type;

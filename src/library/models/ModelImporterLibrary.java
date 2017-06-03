@@ -12,9 +12,11 @@ public class ModelImporterLibrary {
 	}
 	
 	public static ModelImporter findImporter(String extension) {
-		for (Map.Entry<String[], ModelImporter> importer : importers.entrySet()) {
-			if (contains(importer.getKey(), extension)) {
-				return importer.getValue();
+		if (extension != null) {
+			for (Map.Entry<String[], ModelImporter> importer : importers.entrySet()) {
+				if (contains(importer.getKey(), extension)) {
+					return importer.getValue();
+				}
 			}
 		}
 		for (Map.Entry<String[], ModelImporter> importer : importers.entrySet()) {

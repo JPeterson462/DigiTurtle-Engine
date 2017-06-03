@@ -18,6 +18,7 @@ import library.models.collada.ColladaVertex;
 import library.models.collada.GeometryLoader;
 import library.models.collada.SkeletonLoader;
 import library.models.collada.SkinLoader;
+import utils.RelativeStreamGenerator;
 import utils.XMLNode;
 import utils.XMLParser;
 
@@ -33,7 +34,7 @@ public class ColladaModelImporter implements ModelImporter {
 	}
 
 	@Override
-	public Model importModel(InputStream stream, String animation, Renderer renderer) {
+	public Model importModel(InputStream stream, String animation, Renderer renderer, RelativeStreamGenerator streamGenerator) {
 		XMLNode node = XMLParser.loadXmlFile(stream);
 		SkinLoader skinLoader = new SkinLoader(node.getChild("library_controllers"), MAX_WEIGHTS);
 		ColladaSkinning skinningData = skinLoader.extractSkinData();

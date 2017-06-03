@@ -9,7 +9,7 @@ public class AssetInputStream extends InputStream implements RelativeStreamGener
 
 	private InputStream source;
 	
-	private String path;
+	private String path, fullPath;
 	
 	public AssetInputStream(String path) {
 		this.path = path;
@@ -20,7 +20,12 @@ public class AssetInputStream extends InputStream implements RelativeStreamGener
 		return path;
 	}
 	
+	public String getFullPath() {
+		return fullPath;
+	}
+	
 	private InputStream connectToSource(String path) {
+		fullPath = "test/" + path;
 		return getClass().getClassLoader().getResourceAsStream("test/" + path);
 	}
 	

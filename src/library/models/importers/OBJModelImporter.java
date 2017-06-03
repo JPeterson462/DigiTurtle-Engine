@@ -13,6 +13,7 @@ import library.models.Mesh;
 import library.models.Model;
 import library.models.ModelImporter;
 import library.models.ModelVertexQueue;
+import utils.RelativeStreamGenerator;
 
 public class OBJModelImporter implements ModelImporter {
 
@@ -24,7 +25,7 @@ public class OBJModelImporter implements ModelImporter {
 	}
 
 	@Override
-	public Model importModel(InputStream stream, String animation, Renderer renderer) {
+	public Model importModel(InputStream stream, String animation, Renderer renderer, RelativeStreamGenerator streamGenerator) {
 		if (animation != null) {
 			Log.warn("OBJ Importer ignoring animation '" + animation + "'");
 		}

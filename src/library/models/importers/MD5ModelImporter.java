@@ -18,13 +18,14 @@ import com.esotericsoftware.minlog.Log;
 
 import engine.AssetInputStream;
 import engine.rendering.Renderer;
-import engine.world.Material;
 import library.models.Joint;
+import library.models.Material;
 import library.models.Mesh;
 import library.models.Model;
 import library.models.ModelImporter;
 import library.models.Vertex;
 import utils.AtomicObject;
+import utils.RelativeStreamGenerator;
 
 public class MD5ModelImporter implements ModelImporter {
 	
@@ -46,7 +47,7 @@ public class MD5ModelImporter implements ModelImporter {
 	}
 
 	@Override
-	public Model importModel(InputStream stream, String animation, Renderer renderer) {
+	public Model importModel(InputStream stream, String animation, Renderer renderer, RelativeStreamGenerator streamGenerator) {
 		Model model = new Model();
 		final int DEFAULT_SECTION = 0, MESH_SECTION = 1, JOINTS_SECTION = 2;
 		AtomicInteger section = new AtomicInteger(DEFAULT_SECTION);
@@ -138,7 +139,7 @@ public class MD5ModelImporter implements ModelImporter {
 							if (line.startsWith("shader ")) {
 								InputStream diffuseTexture = findTexture(line.substring("shader ".length()), stream);
 								Material material = new Material();
-								material.setDiffuseTexture(renderer.createTexture(diffuseTexture, true));
+								material.setDiffuseTexture(diffuseTexture);
 								materialPointer.set(material);
 							}
 							else if (line.startsWith("numverts ")) {

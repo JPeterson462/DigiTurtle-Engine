@@ -13,4 +13,6 @@ public interface Bounds {
 	
 	public Vector3f getOverlap(Bounds other);
 	
+	public Vector3f intersects(Ray ray);
+	
 }

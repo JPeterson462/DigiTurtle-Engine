@@ -18,7 +18,7 @@ public class PolyhedronBounds implements Bounds {
 	
 	private class Overlap {
 		private Vector3f overlapV, overlapN; // minimum translation vector, overlap axis
-		private float overlap; // overlap distance
+		private float overlap = Float.MAX_VALUE; // overlap distance
 		private boolean aInB, bInA;
 		public Overlap() {
 			aInB = true;
@@ -49,6 +49,24 @@ public class PolyhedronBounds implements Bounds {
 		if (overlaps(other, overlap)) {
 			overlap.overlapV.set(overlap.overlapN).mul(overlap.overlap);
 			return overlap.overlapV;
+		}
+		return null;
+	}
+	
+	@Override
+	public Vector3f intersects(Ray ray) {
+		ArrayList<Vector3f> vertices = polyhedron.getVertices();
+		for (int v = 0; v < vertices.size() - 2; v++) {
+			Triangle triangle;
+			if ((v & 1) != 0) {
+				triangle = new Triangle(vertices.get(v + 0), vertices.get(v + 1), vertices.get(v + 2));
+			} else {
+				triangle = new Triangle(vertices.get(v + 0), vertices.get(v + 2), vertices.get(v + 1));
+			}
+			Vector3f intersection = triangle.intersects(ray);
+			if (intersection != null) {
+				return intersection;
+			}
 		}
 		return null;
 	}
@@ -140,11 +158,14 @@ public class PolyhedronBounds implements Bounds {
 				overlapDistance = delta1 < delta2 ? delta1 : -delta2;
 			}
 		}
+		float signedOverlapDistance = overlapDistance;
 		overlapDistance = Math.abs(overlapDistance);
-		overlap.overlap = overlapDistance;
-		overlap.overlapN.set(axis.normalize());
-		if (overlapDistance < 0) {
-			overlap.overlapN.negate();
+		if (overlapDistance < overlap.overlap) {
+			overlap.overlap = overlapDistance;
+			overlap.overlapN.set(axis.normalize());
+			if (signedOverlapDistance < 0) {
+				overlap.overlapN.negate();
+			}
 		}
 		return false;
 	}
@@ -152,7 +173,7 @@ public class PolyhedronBounds implements Bounds {
 	private void flattenPoints(ArrayList<Vector3f> vertices, Vector3f axis, Vector2f projection) {
 		float min = axis.dot(vertices.get(0));
 		float max = min;
-		for (int i = 0; i < vertices.size(); i++) {
+		for (int i = 1; i < vertices.size(); i++) {
 			float dot = axis.dot(vertices.get(i));
 			if (dot < min) {
 				min = dot;

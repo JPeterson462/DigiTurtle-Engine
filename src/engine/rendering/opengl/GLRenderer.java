@@ -114,6 +114,11 @@ public class GLRenderer implements Renderer {
 	}
 
 	@Override
+	public Texture createCubemap(InputStream right, InputStream left, InputStream top, InputStream bottom, InputStream back, InputStream front) {
+		return new GLTexture(right, left, top, bottom, back, front);
+	}
+	
+	@Override
 	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes) {
 		return new GLShader(vertexStream, fragmentStream, attributes);
 	}

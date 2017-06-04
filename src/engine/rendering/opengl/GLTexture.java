@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.stb.STBImage;
 
 import engine.rendering.Texture;
@@ -16,6 +17,54 @@ public class GLTexture implements Texture {
 	private int width, height, type;
 	
 	private library.opengl.GLTexture texture;
+	
+	public GLTexture(InputStream right, InputStream left, InputStream top, InputStream bottom, InputStream back, InputStream front) {
+		int[] widthBuf = {0}, heightBuf = {0}, componentsBuf = {0};
+		ByteBuffer rightData = IOUtils.readBufferQuietly(right);
+		ByteBuffer leftData = IOUtils.readBufferQuietly(left);
+		ByteBuffer topData = IOUtils.readBufferQuietly(top);
+		ByteBuffer bottomData = IOUtils.readBufferQuietly(bottom);
+		ByteBuffer backData = IOUtils.readBufferQuietly(back);
+		ByteBuffer frontData = IOUtils.readBufferQuietly(front);
+		ByteBuffer rightBuf = STBImage.stbi_load_from_memory(rightData, widthBuf, heightBuf, componentsBuf, 0);
+		int rightComponents = componentsBuf[0];
+		int rightType = getFormat(rightComponents);
+		ByteBuffer leftBuf = STBImage.stbi_load_from_memory(leftData, widthBuf, heightBuf, componentsBuf, 0);
+		int leftComponents = componentsBuf[0];
+		int leftType = getFormat(leftComponents);
+		ByteBuffer topBuf = STBImage.stbi_load_from_memory(topData, widthBuf, heightBuf, componentsBuf, 0);
+		int topComponents = componentsBuf[0];
+		int topType = getFormat(topComponents);
+		ByteBuffer bottomBuf = STBImage.stbi_load_from_memory(bottomData, widthBuf, heightBuf, componentsBuf, 0);
+		int bottomComponents = componentsBuf[0];
+		int bottomType = getFormat(bottomComponents);
+		ByteBuffer backBuf = STBImage.stbi_load_from_memory(backData, widthBuf, heightBuf, componentsBuf, 0);
+		int backComponents = componentsBuf[0];
+		int backType = getFormat(backComponents);
+		ByteBuffer frontBuf = STBImage.stbi_load_from_memory(frontData, widthBuf, heightBuf, componentsBuf, 0);
+		int frontComponents = componentsBuf[0];
+		int frontType = getFormat(frontComponents);
+		width = widthBuf[0];
+		height = heightBuf[0];
+		type = getType(Math.min(Math.min(rightComponents, Math.min(leftComponents, topComponents)), Math.min(bottomComponents, Math.min(backComponents, frontComponents))));
+		int format = getFormat(Math.min(Math.min(rightComponents, Math.min(leftComponents, topComponents)), Math.min(bottomComponents, Math.min(backComponents, frontComponents))));
+		if (type < 0) {
+			throw new IllegalArgumentException("Invalid texture format supplied");
+		}
+		texture = new library.opengl.GLTexture(GL13.GL_TEXTURE_CUBE_MAP);
+		texture.bind();
+		GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, format, width, height, 0, rightType, GL11.GL_UNSIGNED_BYTE, rightBuf);
+		GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, format, width, height, 0, leftType, GL11.GL_UNSIGNED_BYTE, leftBuf);
+		GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, format, width, height, 0, topType, GL11.GL_UNSIGNED_BYTE, topBuf);
+		GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, format, width, height, 0, bottomType, GL11.GL_UNSIGNED_BYTE, bottomBuf);
+		GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, format, width, height, 0, backType, GL11.GL_UNSIGNED_BYTE, backBuf);
+		GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, format, width, height, 0, frontType, GL11.GL_UNSIGNED_BYTE, frontBuf);
+		texture.magFilter(GL11.GL_LINEAR);
+		texture.minFilter(GL11.GL_LINEAR);
+		texture.wrapS(GL12.GL_CLAMP_TO_EDGE);
+		texture.wrapT(GL12.GL_CLAMP_TO_EDGE);
+		texture.unbind();
+	}
 	
 	public GLTexture(InputStream stream, boolean repeat, boolean anisotropicFiltering) {
 		ByteBuffer data = IOUtils.readBufferQuietly(stream);

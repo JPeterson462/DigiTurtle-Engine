@@ -68,6 +68,12 @@
 	- Fixed collision detection and resolution
 	- Added an entity tagging system
 	- Updated LWJGL
+6/3/17:
+	- Added depth of field
+	- Added skybox
+	- Started implementing fog
+
+-- physics jittering
 
 https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
 
@@ -78,8 +84,9 @@ TIMELINE
 *		- Multitexturing [TerrainTexturePack]
 		- Normal Mapping
 	2. Post Processing
-		- Depth of Field
+*		- Depth of Field
 		- Fix FXAA (Faster and better)
+		-- Find other effects
 	3. Shadows
 		- Percentage Closer Filtering
 *	4. Instanced Geometry
@@ -88,13 +95,12 @@ TIMELINE
 	6. Lighting
 		- Fix lighting calculations
 		- Materials
-		- Fix Cone Light Range
 		- Occlusion calculations
 		- Project Lighting (i.e. Position) with View Matrix
 	7. Decal and Transparency Passes
 	8. Controller Input
 		- First Person Movement
-	9. Skybox
+*	9. Skybox
 	10. God Rays
 	11. Order Independent Transparency
 	12. Mouse Picking
@@ -116,6 +122,7 @@ TIMELINE
 	19. User Interface
 *	20. Input Processing
 	21. Photo-realistic Rendering
+	22. Fix microphone recording
 
 TODO
 	- Shadows
@@ -137,10 +144,8 @@ TODO
 	
 	- What else needs Components?
 	- Order independent transparency
-	- Input processing
 	
 	- Skybox
 	- Mouse Picking
 	- Physics engine
-	- Particle system
 	- Water rendering

@@ -35,6 +35,8 @@ import engine.world.AmbientLight;
 import engine.world.Entity;
 import engine.world.EntityTag;
 import engine.world.PointLight;
+import engine.world.Skybox;
+import engine.world.SkyboxBlender;
 import engine.world.SpotLight;
 import engine.world.TerrainGenerator;
 import engine.world.TerrainTexturePack;
@@ -136,7 +138,7 @@ public class Test {
 			crate.setScale(new Vector3f(0.05f));
 			crate.setPosition(new Vector3f(10, 0, 10));
 			crate.addComponent(new MeshComponent(crateModel, renderer, false));
-			crate.addComponent(new PhysicalComponent(crate.getPosition(), crate.getOrientation(), 5, new PolyhedronBounds(builder.buildCube(10))) {
+			crate.addComponent(new PhysicalComponent(crate.getPosition(), crate.getOrientation(), 5, new PolyhedronBounds(builder.buildCube(17))) {
 				@Override
 				public void onCollision(Entity other) {
 					
@@ -158,7 +160,7 @@ public class Test {
 			entity.addComponent(new AnimationComponent());
 			entity.getComponent(AnimationComponent.class).doAnimation(animation);
 			entity.setOrientation(new Quaternionf().rotateY((float) Math.PI * 0.25f));
-			entity.addComponent(new PhysicalComponent(entity.getPosition(), entity.getOrientation(), Float.MAX_VALUE, new PolyhedronBounds(builder.buildCube(4))) {
+			entity.addComponent(new PhysicalComponent(entity.getPosition(), entity.getOrientation(), Float.MAX_VALUE, new PolyhedronBounds(builder.buildCube(4, 10, 4))) {
 				@Override
 				public void onCollision(Entity other) {
 					System.out.println("Collision into " + other);
@@ -199,6 +201,16 @@ public class Test {
 			world.setTerrain(0, 1, gen, pack);
 			world.setTerrain(1, 1, gen, pack);
 			
+			Texture texture1_ = renderer.createCubemap(new AssetInputStream("mp_firestorm/fire-storm_rt.tga"), 
+					new AssetInputStream("mp_firestorm/fire-storm_lf.tga"), new AssetInputStream("mp_firestorm/fire-storm_up.tga"), 
+					new AssetInputStream("mp_firestorm/fire-storm_dn.tga"), new AssetInputStream("mp_firestorm/fire-storm_bk.tga"), 
+					new AssetInputStream("mp_firestorm/fire-storm_ft.tga"));
+			Texture texture2_ = renderer.createCubemap(new AssetInputStream("sky/right.png"), 
+					new AssetInputStream("sky/left.png"), new AssetInputStream("sky/top.png"), 
+					new AssetInputStream("sky/bottom.png"), new AssetInputStream("sky/back.png"), 
+					new AssetInputStream("sky/front.png"));
+			world.setSkybox(new Skybox(texture1_, texture1_, new SkyboxBlender(24, 5, 8, 21), new Vector3f(0.9f, 0.9f, 0.9f)));
+			
 			soundSystem = new ALSoundSystem();
 			soundSystem.createContext();
 			
@@ -229,7 +241,8 @@ public class Test {
 			
 			float height = 5;
 //			cameraPosition.set(0, height, dist);
-			cameraPosition.set(40, 40, 40);
+			float d = 15;
+			cameraPosition.set(d, d, d);
 			//cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)), dist, dist * (float) Math.sin(Math.toRadians(t)));
 			camera.setPosition(cameraPosition);
 			camera.setYaw(-45);

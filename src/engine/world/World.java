@@ -22,6 +22,8 @@ public class World {
 	
 	private TerrainChunk[][] terrain;
 	
+	private Skybox skybox;
+	
 	private float width, height, resolution;
 	
 	public World(float chunkWidth, float chunkHeight, float resolution, int width, int height) {
@@ -29,6 +31,14 @@ public class World {
 		this.height = chunkHeight;
 		this.resolution = resolution;
 		terrain = new TerrainChunk[width][height];
+	}
+	
+	public Skybox getSkybox() {
+		return skybox;
+	}
+	
+	public void setSkybox(Skybox skybox) {
+		this.skybox = skybox;
 	}
 	
 	public void forEachEntity(Receiver<Entity> receiver) {
@@ -202,6 +212,7 @@ public class World {
 	}
 	
 	public void update(float dt) {
+		skybox.update(dt);
 		forEachEntity((entity) -> entity.update(dt));
 	}
 

@@ -6,12 +6,12 @@ import java.util.HashMap;
 import org.joml.Vector3f;
 
 import engine.Camera;
-import engine.effects.ParticleRenderer;
 import engine.rendering.Geometry;
 import engine.rendering.Texture;
 import engine.world.Entity;
 import engine.world.Light;
 import engine.world.Material;
+import engine.world.Skybox;
 import engine.world.TerrainChunk;
 
 public interface RenderingPipeline {
@@ -20,11 +20,15 @@ public interface RenderingPipeline {
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> defaultSkeletalEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities,
-			TerrainChunk[][] terrain);
+			TerrainChunk[][] terrain, Skybox skybox);
 	
 	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition);
 	
 	public void doFXAAPass();
+	
+	public void doDOFPass();
+	
+	public void doFogPass(Skybox skybox);
 	
 	public void doFinalRender();
 	

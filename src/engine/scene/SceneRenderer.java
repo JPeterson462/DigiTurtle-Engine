@@ -36,9 +36,12 @@ public class SceneRenderer {
 	
 	public void render(Camera camera, Vector3f cameraPosition, World world) {
 		pipeline.doGeometryPass(camera, world.getDefaultEntities(), world.getNormalMappedEntities(),
-				world.getDefaultSkeletalEntities(), world.getNormalMappedSkeletalEntities(), world.getTerrain());
+				world.getDefaultSkeletalEntities(), world.getNormalMappedSkeletalEntities(), 
+				world.getTerrain(), world.getSkybox());
 		pipeline.doLightingPass(lightLevel, camera, world.getLights(), cameraPosition);
 		pipeline.doFXAAPass();
+		pipeline.doDOFPass();
+		pipeline.doFogPass(world.getSkybox());
 		pipeline.doFinalRender();
 	}
 

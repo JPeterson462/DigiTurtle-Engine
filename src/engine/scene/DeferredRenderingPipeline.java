@@ -9,11 +9,12 @@ import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 
 import engine.Camera;
 import engine.CoreSettings;
 import engine.GraphicsSettings;
-import engine.effects.ParticleRenderer;
 import engine.rendering.BlendMode;
 import engine.rendering.Framebuffer;
 import engine.rendering.Geometry;
@@ -28,16 +29,20 @@ import engine.world.Entity;
 import engine.world.Light;
 import engine.world.Material;
 import engine.world.PointLight;
+import engine.world.Skybox;
 import engine.world.SpotLight;
 import engine.world.TerrainChunk;
 import engine.world.TerrainTexturePack;
+import utils.CubeGenerator;
 
 public class DeferredRenderingPipeline implements RenderingPipeline {
 	
-	private Shader defaultGeometryShader, normalMappedGeometryShader, defaultSkeletalGeometryShader, 
-		normalMappedSkeletalGeometryShader, pointLightShader, ambientLightShader, fxaaShader, terrainShader;
+	private Shader defaultGeometryShader, normalMappedGeometryShader, 
+		defaultSkeletalGeometryShader, normalMappedSkeletalGeometryShader, 
+		pointLightShader, ambientLightShader, fxaaShader, terrainShader, 
+		dofShader, skyShader, fogShader;
 	
-	private Framebuffer geometryPass, lightingPass;
+	private Framebuffer geometryPass, lightingPass, fxaaPass, skyPass, dofPass, fogPass;
 	
 	private Geometry lightingFullscreenPass, postProcessingPass;
 	
@@ -59,8 +64,17 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	private int ambientLightShader_viewMatrix, ambientLightShader_projectionMatrix;
 	private int terrainShader_viewMatrix, terrainShader_modelMatrix,
 		terrainShader_projectionMatrix;
+	private int skyShader_viewMatrix, skyShader_modelMatrix,
+		skyShader_projectionMatrix, skyShader_blendFactor;
+	private int fogShader_fogColor, fogShader_fogDensity, fogShader_fogDistance;
 	
 	private Renderer renderer;
+	
+	private Geometry skyCube;
+	
+	private CubeGenerator cubeGenerator = new CubeGenerator();
+	
+	private Framebuffer lastPass;
 	
 	public DeferredRenderingPipeline(Renderer renderer, CoreSettings coreSettings, GraphicsSettings graphicsSettings) {
 		this.renderer = renderer;
@@ -68,6 +82,10 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		this.graphicsSettings = graphicsSettings;
 		geometryPass = renderer.createFramebuffer(2);
 		lightingPass = renderer.createFramebuffer(1);
+		fxaaPass = renderer.createFramebuffer(1);
+		skyPass = renderer.createFramebuffer(1);
+		dofPass = renderer.createFramebuffer(1);
+		fogPass = renderer.createFramebuffer(1);
 		// Default Geometry
 		HashMap<Integer, String> attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
@@ -148,6 +166,30 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		fxaaShader.uploadInteger(fxaaShader.getUniformLocation("diffuseTexture"), 0);
 		fxaaShader.uploadVector(fxaaShader.getUniformLocation("resolution"), new Vector2f(coreSettings.width, coreSettings.height));
 		fxaaShader.unbind();
+		// Depth of Field Shader
+		attributes = new HashMap<>();
+		attributes.put(0, "in_Position");
+		dofShader = renderer.createShader(getShader("postVertex"), getShader("dofFragment"), attributes);
+		dofShader.bind();
+		dofShader.uploadInteger(dofShader.getUniformLocation("diffuseTexture"), 0);
+		dofShader.uploadVector(dofShader.getUniformLocation("resolution"), new Vector2f(coreSettings.width, coreSettings.height));
+		dofShader.uploadFloat(dofShader.getUniformLocation("focusDistance"), graphicsSettings.dofDistance);
+		dofShader.uploadFloat(dofShader.getUniformLocation("focusRange"), graphicsSettings.dofRange);
+		dofShader.uploadVector(dofShader.getUniformLocation("nearFar"), new Vector2f(graphicsSettings.near, graphicsSettings.far));
+		dofShader.unbind();
+		// Fog Shader
+		attributes = new HashMap<>();
+		attributes.put(0, "in_Position");
+		fogShader = renderer.createShader(getShader("postVertex"), getShader("fogFragment"), attributes);
+		fogShader.bind();
+		fogShader.uploadVector(fogShader.getUniformLocation("nearFar"), new Vector2f(graphicsSettings.near, graphicsSettings.far));
+		fogShader_fogColor = fogShader.getUniformLocation("fogColor");
+		fogShader_fogDensity = fogShader.getUniformLocation("fogDensity");
+		fogShader_fogDistance = fogShader.getUniformLocation("fogDistance");
+		fogShader.uploadInteger(fogShader.getUniformLocation("diffuseTexture"), 0);
+		fogShader.uploadInteger(fogShader.getUniformLocation("depthTexture"), 1);
+		fogShader.uploadInteger(fogShader.getUniformLocation("skyTexture"), 2);
+		fogShader.unbind();
 		// Terrain Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
@@ -161,6 +203,19 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		TerrainTexturePack texturePack = new TerrainTexturePack(null, null, null, null, null);
 		texturePack.connect(terrainShader);
 		terrainShader.unbind();
+		// Sky Shader
+		attributes = new HashMap<>();
+		attributes.put(0, "in_Position");
+		skyShader = renderer.createShader(getShader("skyVertex"), getShader("skyFragment"), attributes);
+		skyShader.bind();
+		skyShader_viewMatrix = skyShader.getUniformLocation("viewMatrix");
+		skyShader_modelMatrix = skyShader.getUniformLocation("modelMatrix");
+		skyShader_projectionMatrix = skyShader.getUniformLocation("projectionMatrix");
+		skyShader.uploadInteger(skyShader.getUniformLocation("cubeMap1"), 0);
+		skyShader.uploadInteger(skyShader.getUniformLocation("cubeMap2"), 1);
+		skyShader_blendFactor = skyShader.getUniformLocation("blendFactor");
+		skyShader.unbind();
+		skyCube = renderer.createGeometry(cubeGenerator.generateCube(1), Vertex.POSITION_BIT);
 		// Fullscreen Pass
 		lightingFullscreenPass = createFullscreenQuad(renderer);
 		postProcessingPass = createPostProcessingPass(renderer);
@@ -206,9 +261,13 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	public void doGeometryPass(Camera camera, HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> defaultEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedEntities,
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> defaultSkeletalEntities,
-			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities, TerrainChunk[][] terrain) {
+			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities, 
+			TerrainChunk[][] terrain, Skybox skybox) {
 		renderer.setBlendMode(BlendMode.OVERWRITE);
 		Matrix4f modelMatrix = new Matrix4f();
+		skyPass.bind();
+		renderSkybox(new Matrix4f().rotateY(skybox.getRotation()).scale(500), skyShader, camera, skybox, skyShader_projectionMatrix, skyShader_viewMatrix, skyShader_modelMatrix);
+		skyPass.unbind();
 		geometryPass.bind();
 		renderTerrain(modelMatrix, terrainShader, camera, terrain, terrainShader_projectionMatrix, terrainShader_viewMatrix, terrainShader_modelMatrix);
 		renderGeometry(modelMatrix, defaultGeometryShader, camera, defaultEntities, false, false,
@@ -220,6 +279,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		renderGeometry(modelMatrix, normalMappedSkeletalGeometryShader, camera, normalMappedSkeletalEntities, true, true,
 				normalMappedSkeletalGeometryShader_projectionMatrix, normalMappedSkeletalGeometryShader_viewMatrix, normalMappedSkeletalGeometryShader_modelMatrix);
 		geometryPass.unbind();
+		lastPass = geometryPass;
 		renderer.setBlendMode(BlendMode.DEFAULT);
 	}
 
@@ -295,6 +355,23 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		}
 		shader.unbind();
 	}
+	
+	private void renderSkybox(Matrix4f modelMatrix, Shader shader, Camera camera, Skybox skybox, int projectionMatrixLocation,
+			int viewMatrixLocation, int modelMatrixLocation) {
+		shader.bind();
+		shader.uploadMatrix(projectionMatrixLocation, camera.getProjectionMatrix());
+		shader.uploadMatrix(viewMatrixLocation, camera.getViewMatrix());
+		shader.uploadMatrix(modelMatrixLocation, modelMatrix);//TODO rotating skybox
+		skyCube.bind();
+		skybox.getTexture1().activeTexture(0);
+		skybox.getTexture1().bind();
+		skybox.getTexture2().activeTexture(1);
+		skybox.getTexture2().bind();
+		shader.uploadFloat(skyShader_blendFactor, skybox.getBlendFactor());
+		skyCube.render();
+		skyCube.unbind();
+		shader.unbind();
+	}
 
 	@Override
 	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
@@ -304,6 +381,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		renderLights(pointLightShader, camera, lights, cameraPosition);
 		renderer.setBlendMode(BlendMode.DEFAULT);
 		lightingPass.unbind();
+		lastPass = lightingPass;
 	}
 	
 	private Matrix4f inverseProjectionMatrix = new Matrix4f(), inverseViewMatrix = new Matrix4f();
@@ -338,9 +416,9 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		}
 		lightingShader.uploadVector(viewPosUniform, cameraPosition);
 		lightingFullscreenPass.bind();
-		geometryPass.getColorTexture(0).bind(0);
-		geometryPass.getColorTexture(1).bind(1);
-		geometryPass.getDepthTexture().bind(2);
+		lastPass.getColorTexture(0).bind(0);
+		lastPass.getColorTexture(1).bind(1);
+		lastPass.getDepthTexture().bind(2);
 		for (int i = 0; i < lights.size(); i++) {
 			Light light = lights.get(i);
 			if (light instanceof PointLight) {
@@ -372,7 +450,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 				lightingFullscreenPass.render();
 			}
 		}
-		geometryPass.getColorTexture(0).unbind();
+		lastPass.getColorTexture(0).unbind();
 		lightingFullscreenPass.unbind();
 		lightingShader.unbind();
 	}
@@ -386,7 +464,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		int diffuseTextureUniform = lightingShader.getUniformLocation("diffuseTexture");
 		lightingShader.uploadInteger(diffuseTextureUniform, 0);
 		lightingFullscreenPass.bind();
-		geometryPass.getColorTexture(0).bind(0);
+		lastPass.getColorTexture(0).bind(0);
 		for (int i = 0; i < lights.size(); i++) {
 			Light light = lights.get(i);
 			if (light instanceof AmbientLight) {
@@ -396,31 +474,78 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 				lightingFullscreenPass.render();
 			}
 		}
-		geometryPass.getColorTexture(0).unbind();		
+		lastPass.getColorTexture(0).unbind();		
 		lightingFullscreenPass.unbind();
 		lightingShader.unbind();
 	}
 
 	@Override
 	public void doFXAAPass() {
+		fxaaPass.bind();
 		postProcessingPass.bind();
 		fxaaShader.bind();
-		lightingPass.getColorTexture(0).activeTexture(0);
-		lightingPass.getColorTexture(0).bind();
+		lastPass.getColorTexture(0).activeTexture(0);
+		lastPass.getColorTexture(0).bind();
 		postProcessingPass.render();
 		fxaaShader.unbind();
 		postProcessingPass.unbind();
+		fxaaPass.unbind();
+		lastPass = fxaaPass;
 	}
 
 	@Override
+	public void doDOFPass() {
+		dofPass.bind();
+		postProcessingPass.bind();
+		dofShader.bind();
+		lastPass.getColorTexture(0).activeTexture(0);
+		lastPass.getColorTexture(0).bind();
+		postProcessingPass.render();
+		dofShader.unbind();
+		postProcessingPass.unbind();
+		dofPass.unbind();
+		lastPass = dofPass;
+	}
+
+	@Override
+	public void doFogPass(Skybox skybox) {
+		fogPass.bind();
+		postProcessingPass.bind();
+		fogShader.bind();
+		fogShader.uploadFloat(fogShader_fogDensity, skybox.getFogDensity());
+		fogShader.uploadFloat(fogShader_fogDistance, skybox.getFogDistance());
+		lastPass.getColorTexture(0).activeTexture(0);
+		lastPass.getColorTexture(0).bind();
+		geometryPass.getDepthTexture().activeTexture(1);
+		geometryPass.getDepthTexture().bind();
+		skyPass.getColorTexture(0).activeTexture(2);
+		skyPass.getColorTexture(0).bind();
+		postProcessingPass.render();
+		geometryPass.getDepthTexture().unbind();
+		fogShader.unbind();
+		postProcessingPass.unbind();		
+		fogPass.unbind();
+		lastPass = fogPass;//TODO mix of sky and artificial fog
+		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+	}
+	
+	@Override
 	public void doFinalRender() {
-//		GL11.glBindTexture(GL11.GL_TEXTURE_2D, geometryPass.getDepthTexture().getID());
-//		GL11.glBegin(GL11.GL_QUADS);
-//		GL11.glTexCoord2f(0, 0); GL11.glVertex2f(-1, -1);
-//		GL11.glTexCoord2f(1, 0); GL11.glVertex2f(1, -1);
-//		GL11.glTexCoord2f(1, 1); GL11.glVertex2f(1, 1);
-//		GL11.glTexCoord2f(0, 1); GL11.glVertex2f(-1, 1);
-//		GL11.glEnd();
+		renderer.setBlendMode(BlendMode.DEFAULT);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, skyPass.getColorTexture(0).getID());
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glTexCoord2f(0, 0); GL11.glVertex2f(-1, -1);
+		GL11.glTexCoord2f(1, 0); GL11.glVertex2f(1, -1);
+		GL11.glTexCoord2f(1, 1); GL11.glVertex2f(1, 1);
+		GL11.glTexCoord2f(0, 1); GL11.glVertex2f(-1, 1);
+		GL11.glEnd();
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, lastPass.getColorTexture(0).getID());
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glTexCoord2f(0, 0); GL11.glVertex2f(-1, -1);
+		GL11.glTexCoord2f(1, 0); GL11.glVertex2f(1, -1);
+		GL11.glTexCoord2f(1, 1); GL11.glVertex2f(1, 1);
+		GL11.glTexCoord2f(0, 1); GL11.glVertex2f(-1, 1);
+		GL11.glEnd();
 	}
 
 	@Override

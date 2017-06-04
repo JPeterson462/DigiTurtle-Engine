@@ -21,6 +21,8 @@ public interface Renderer {
 
 	public Texture createTexture(InputStream stream, boolean repeat);
 	
+	public Texture createCubemap(InputStream right, InputStream left, InputStream top, InputStream bottom, InputStream back, InputStream front);
+	
 	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes);
 	
 	public Framebuffer createFramebuffer(int colorAttachments);

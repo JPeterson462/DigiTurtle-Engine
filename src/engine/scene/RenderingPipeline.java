@@ -3,6 +3,7 @@ package engine.scene;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import engine.Camera;
@@ -28,7 +29,7 @@ public interface RenderingPipeline {
 	
 	public void doDOFPass();
 	
-	public void doFogPass(Skybox skybox);
+	public void doFogPass(Skybox skybox, Matrix4f invViewMatrix, Matrix4f invProjectionMatrix, Vector3f cameraPosition);
 	
 	public void doFinalRender();
 	

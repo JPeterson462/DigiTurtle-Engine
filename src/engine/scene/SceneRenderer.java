@@ -1,5 +1,6 @@
 package engine.scene;
 
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import engine.Camera;
@@ -35,13 +36,16 @@ public class SceneRenderer {
 	}
 	
 	public void render(Camera camera, Vector3f cameraPosition, World world) {
+		Matrix4f invViewMatrix = new Matrix4f(), invProjectionMatrix = new Matrix4f();
+		camera.getViewMatrix().invert(invViewMatrix);
+		camera.getProjectionMatrix().invert(invProjectionMatrix);
 		pipeline.doGeometryPass(camera, world.getDefaultEntities(), world.getNormalMappedEntities(),
 				world.getDefaultSkeletalEntities(), world.getNormalMappedSkeletalEntities(), 
 				world.getTerrain(), world.getSkybox());
 		pipeline.doLightingPass(lightLevel, camera, world.getLights(), cameraPosition);
 		pipeline.doFXAAPass();
 		pipeline.doDOFPass();
-		pipeline.doFogPass(world.getSkybox());
+		pipeline.doFogPass(world.getSkybox(), invViewMatrix, invProjectionMatrix, cameraPosition);
 		pipeline.doFinalRender();
 	}
 

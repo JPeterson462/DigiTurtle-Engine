@@ -66,7 +66,8 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		terrainShader_projectionMatrix;
 	private int skyShader_viewMatrix, skyShader_modelMatrix,
 		skyShader_projectionMatrix, skyShader_blendFactor;
-	private int fogShader_fogColor, fogShader_fogDensity, fogShader_fogDistance;
+	private int fogShader_fogColor, fogShader_fogDensity, fogShader_fogDistance, 
+		fogShader_invProjectionMatrix, fogShader_invViewMatrix, fogShader_cameraPosition;
 	
 	private Renderer renderer;
 	
@@ -186,6 +187,9 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		fogShader_fogColor = fogShader.getUniformLocation("fogColor");
 		fogShader_fogDensity = fogShader.getUniformLocation("fogDensity");
 		fogShader_fogDistance = fogShader.getUniformLocation("fogDistance");
+		fogShader_invViewMatrix = fogShader.getUniformLocation("invViewMatrix");
+		fogShader_invProjectionMatrix = fogShader.getUniformLocation("invProjectionMatrix");
+		fogShader_cameraPosition = fogShader.getUniformLocation("cameraPosition");
 		fogShader.uploadInteger(fogShader.getUniformLocation("diffuseTexture"), 0);
 		fogShader.uploadInteger(fogShader.getUniformLocation("depthTexture"), 1);
 		fogShader.uploadInteger(fogShader.getUniformLocation("skyTexture"), 2);
@@ -508,12 +512,15 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	}
 
 	@Override
-	public void doFogPass(Skybox skybox) {
+	public void doFogPass(Skybox skybox, Matrix4f invViewMatrix, Matrix4f invProjectionMatrix, Vector3f cameraPosition) {
 		fogPass.bind();
 		postProcessingPass.bind();
 		fogShader.bind();
 		fogShader.uploadFloat(fogShader_fogDensity, skybox.getFogDensity());
 		fogShader.uploadFloat(fogShader_fogDistance, skybox.getFogDistance());
+		fogShader.uploadMatrix(fogShader_invViewMatrix, invViewMatrix);
+		fogShader.uploadMatrix(fogShader_invProjectionMatrix, invProjectionMatrix);
+		fogShader.uploadVector(fogShader_cameraPosition, cameraPosition);
 		lastPass.getColorTexture(0).activeTexture(0);
 		lastPass.getColorTexture(0).bind();
 		geometryPass.getDepthTexture().activeTexture(1);
@@ -532,13 +539,13 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	@Override
 	public void doFinalRender() {
 		renderer.setBlendMode(BlendMode.DEFAULT);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, skyPass.getColorTexture(0).getID());
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(0, 0); GL11.glVertex2f(-1, -1);
-		GL11.glTexCoord2f(1, 0); GL11.glVertex2f(1, -1);
-		GL11.glTexCoord2f(1, 1); GL11.glVertex2f(1, 1);
-		GL11.glTexCoord2f(0, 1); GL11.glVertex2f(-1, 1);
-		GL11.glEnd();
+//		GL11.glBindTexture(GL11.GL_TEXTURE_2D, skyPass.getColorTexture(0).getID());
+//		GL11.glBegin(GL11.GL_QUADS);
+//		GL11.glTexCoord2f(0, 0); GL11.glVertex2f(-1, -1);
+//		GL11.glTexCoord2f(1, 0); GL11.glVertex2f(1, -1);
+//		GL11.glTexCoord2f(1, 1); GL11.glVertex2f(1, 1);
+//		GL11.glTexCoord2f(0, 1); GL11.glVertex2f(-1, 1);
+//		GL11.glEnd();
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, lastPass.getColorTexture(0).getID());
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glTexCoord2f(0, 0); GL11.glVertex2f(-1, -1);

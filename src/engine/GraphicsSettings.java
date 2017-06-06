@@ -14,7 +14,7 @@ public class GraphicsSettings {
 		far = 1000f;
 		anisotropicFiltering = false;
 		dofDistance = 0;
-		dofRange = 50;
+		dofRange = 32;
 	}
 
 }

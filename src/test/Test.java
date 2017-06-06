@@ -125,7 +125,7 @@ public class Test {
 //			entity.addComponent(mesh);
 //			scene.addEntity(entity);
 
-			world = new World(2000, 2000, 10, 2, 2);
+			world = new World(500, 500, 10, 2, 2);
 			
 			PolyhedronBuilder builder = new PolyhedronBuilder();
 			
@@ -163,7 +163,7 @@ public class Test {
 			entity.addComponent(new PhysicalComponent(entity.getPosition(), entity.getOrientation(), Float.MAX_VALUE, new PolyhedronBounds(builder.buildCube(4, 10, 4))) {
 				@Override
 				public void onCollision(Entity other) {
-					System.out.println("Collision into " + other);
+//					System.out.println("Collision into " + other);
 				}
 			});
 			
@@ -209,7 +209,8 @@ public class Test {
 					new AssetInputStream("sky/left.png"), new AssetInputStream("sky/top.png"), 
 					new AssetInputStream("sky/bottom.png"), new AssetInputStream("sky/back.png"), 
 					new AssetInputStream("sky/front.png"));
-			world.setSkybox(new Skybox(texture1_, texture1_, new SkyboxBlender(24, 5, 8, 21), new Vector3f(0.9f, 0.9f, 0.9f)));
+			world.setSkybox(new Skybox(texture1_, texture2_, new SkyboxBlender(24, 5, 8, 21), new Vector3f(0.9f, 0.9f, 0.9f)));
+			world.getSkybox().setFogDensity(0.1f);
 			
 			soundSystem = new ALSoundSystem();
 			soundSystem.createContext();
@@ -221,7 +222,7 @@ public class Test {
 			music.play();
 			
 			particleRenderer = new ParticleRenderer(renderer, camera, new Vector2f(coreSettings.width, coreSettings.height));
-			ParticleEmitter emitter0 = new BasicParticleEmitter(camera, aTexture, new Vector3f(0, 5, -10), 0.01f, 5f, 0.4f, 2, 10, 3f, 0.1f, 2f, 0.1f, new int[] { 3, 3 });
+			ParticleEmitter emitter0 = new BasicParticleEmitter(camera, aTexture, new Vector3f(0, 12, 0), 0.01f, 5f, 0.4f, 2, 10, 3f, 0.1f, 0.1f, 0.1f, new int[] { 3, 3 });
 			particleRenderer.addEmitter(emitter0);
 		});
 		while (renderer.validContext()) {			
@@ -262,8 +263,8 @@ public class Test {
 			particleRenderer.update(dt, cameraPosition);
 			scene.render(camera, cameraPosition, world);
 			
-			//GL11.glDepthFunc(GL11.GL_ALWAYS);
-			//particleRenderer.render(scene.getDepthTexture());
+			GL11.glDepthFunc(GL11.GL_ALWAYS);
+			particleRenderer.render(scene.getDepthTexture());
 			
 //			buffer.render();
 			

@@ -183,7 +183,7 @@ public class Test {
 			spotLight.setAngle((float) Math.PI / 180f);
 			spotLight.setDirection(0, 1, 0);
 			world.addLight(spotLight);
-			scene.setLightLevel(0.3f);
+			scene.setLightLevel(0.1f);
 			
 			long seed = System.nanoTime();
 			OpenSimplexNoise noise = new OpenSimplexNoise(seed);
@@ -210,7 +210,8 @@ public class Test {
 					new AssetInputStream("sky/bottom.png"), new AssetInputStream("sky/back.png"), 
 					new AssetInputStream("sky/front.png"));
 			world.setSkybox(new Skybox(texture1_, texture2_, new SkyboxBlender(24, 5, 8, 21), new Vector3f(0.9f, 0.9f, 0.9f)));
-			world.getSkybox().setFogDensity(0.1f);
+			world.getSkybox().setFogDensity(0.2f);
+			world.getSkybox().setFogDistance(100);
 			
 			soundSystem = new ALSoundSystem();
 			soundSystem.createContext();
@@ -263,8 +264,8 @@ public class Test {
 			particleRenderer.update(dt, cameraPosition);
 			scene.render(camera, cameraPosition, world);
 			
-			GL11.glDepthFunc(GL11.GL_ALWAYS);
-			particleRenderer.render(scene.getDepthTexture());
+			//GL11.glDepthFunc(GL11.GL_ALWAYS);
+			//particleRenderer.render(scene.getDepthTexture());
 			
 //			buffer.render();
 			

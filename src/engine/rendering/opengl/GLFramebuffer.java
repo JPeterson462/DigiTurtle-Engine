@@ -16,12 +16,16 @@ public class GLFramebuffer implements Framebuffer {
 	
 	private int width, height, contextWidth, contextHeight;
 	
-	public GLFramebuffer(int width, int height, int colorAttachments, int contextWidth, int contextHeight) {
+	public GLFramebuffer(int width, int height, int colorAttachments, int contextWidth, int contextHeight, int type) {
 		framebuffer = new library.opengl.GLFramebuffer(GL30.GL_FRAMEBUFFER);
 		framebuffer.bind();
 		colorTextures = new GLTexture[colorAttachments];
 		for (int i = 0; i < colorAttachments; i++) {
-			colorTextures[i] = new GLTexture(false, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE);
+			if (type == GL11.GL_FLOAT) {
+				colorTextures[i] = new GLTexture(false, width, height, GL30.GL_RGBA16F, GL11.GL_RGBA, type);
+			} else {
+				colorTextures[i] = new GLTexture(false, width, height, GL11.GL_RGBA, GL11.GL_RGBA, type);
+			}
 			framebuffer.attachColorTexture(i, colorTextures[i].getID());
 		}
 		depthTexture = new GLTexture(false, width, height, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT);

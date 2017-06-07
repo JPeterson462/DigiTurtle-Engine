@@ -40,9 +40,9 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	private Shader defaultGeometryShader, normalMappedGeometryShader, 
 		defaultSkeletalGeometryShader, normalMappedSkeletalGeometryShader, 
 		pointLightShader, ambientLightShader, fxaaShader, terrainShader, 
-		dofShader, skyShader, fogShader;
+		dofShader, skyShader, fogShader, hdrShader;
 	
-	private Framebuffer geometryPass, lightingPass, fxaaPass, skyPass, dofPass, fogPass;
+	private Framebuffer geometryPass, lightingPass, fxaaPass, skyPass, dofPass, fogPass, hdrPass;
 	
 	private Geometry lightingFullscreenPass, postProcessingPass;
 	
@@ -82,11 +82,13 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		this.coreSettings = coreSettings;
 		this.graphicsSettings = graphicsSettings;
 		geometryPass = renderer.createFramebuffer(2);
-		lightingPass = renderer.createFramebuffer(1);
+		lightingPass = renderer.createFloatingPointFramebuffer(1);
+//		lightingPass = renderer.createFramebuffer(1);
 		fxaaPass = renderer.createFramebuffer(1);
 		skyPass = renderer.createFramebuffer(1);
 		dofPass = renderer.createFramebuffer(1);
 		fogPass = renderer.createFramebuffer(1);
+		hdrPass = renderer.createFramebuffer(1);
 		// Default Geometry
 		HashMap<Integer, String> attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
@@ -220,6 +222,14 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		skyShader_blendFactor = skyShader.getUniformLocation("blendFactor");
 		skyShader.unbind();
 		skyCube = renderer.createGeometry(cubeGenerator.generateCube(1), Vertex.POSITION_BIT);
+		// HDR Shader
+		attributes = new HashMap<>();
+		attributes.put(0, "in_Position");
+		hdrShader = renderer.createShader(getShader("postVertex"), getShader("hdrFragment"), attributes);
+		hdrShader.bind();
+		hdrShader.uploadInteger(hdrShader.getUniformLocation("diffuseTexture"), 0);
+		hdrShader.uploadFloat(hdrShader.getUniformLocation("exposure"), graphicsSettings.hdrExposure);
+		hdrShader.unbind();
 		// Fullscreen Pass
 		lightingFullscreenPass = createFullscreenQuad(renderer);
 		postProcessingPass = createPostProcessingPass(renderer);
@@ -386,6 +396,16 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		renderer.setBlendMode(BlendMode.DEFAULT);
 		lightingPass.unbind();
 		lastPass = lightingPass;
+		hdrPass.bind();
+		postProcessingPass.bind();
+		hdrShader.bind();
+		lightingPass.getColorTexture(0).activeTexture(0);
+		lightingPass.getColorTexture(0).bind();
+		postProcessingPass.render();
+		hdrShader.unbind();
+		postProcessingPass.unbind();
+		hdrPass.unbind();
+		lastPass = hdrPass;
 	}
 	
 	private Matrix4f inverseProjectionMatrix = new Matrix4f(), inverseViewMatrix = new Matrix4f();
@@ -516,6 +536,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		fogPass.bind();
 		postProcessingPass.bind();
 		fogShader.bind();
+		fogShader.uploadVector(fogShader_fogColor, skybox.getFogColor());
 		fogShader.uploadFloat(fogShader_fogDensity, skybox.getFogDensity());
 		fogShader.uploadFloat(fogShader_fogDistance, skybox.getFogDistance());
 		fogShader.uploadMatrix(fogShader_invViewMatrix, invViewMatrix);

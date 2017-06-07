@@ -129,8 +129,13 @@ public class GLRenderer implements Renderer {
 	}
 
 	@Override
+	public Framebuffer createFloatingPointFramebuffer(int colorAttachments) {
+		return new GLFramebuffer(width, height, colorAttachments, this.width, this.height, GL11.GL_FLOAT);
+	}
+
+	@Override
 	public Framebuffer createFramebuffer(int width, int height, int colorAttachments) {
-		return new GLFramebuffer(width, height, colorAttachments, this.width, this.height);
+		return new GLFramebuffer(width, height, colorAttachments, this.width, this.height, GL11.GL_UNSIGNED_BYTE);
 	}
 	
 	@Override

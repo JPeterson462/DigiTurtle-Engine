@@ -170,9 +170,9 @@ public class Test {
 			world.addEntity(entity);
 			
 			world.addLight(new AmbientLight(1, 1, 1));
-			PointLight pointLight = new PointLight(0, 0, 1);
+			PointLight pointLight = new PointLight(1, 1, 1);
 			pointLight.setRange(20);
-			pointLight.setPosition(50, 0, 50);
+			pointLight.setPosition(0, 0, 0);
 			world.addLight(pointLight);
 //			DirectionalLight directionalLight = new DirectionalLight(1, 1, 0);
 //			directionalLight.setDirection(-1, -1, -1);
@@ -182,7 +182,7 @@ public class Test {
 			spotLight.setPosition(0, 25, 25);
 			spotLight.setAngle((float) Math.PI / 180f);
 			spotLight.setDirection(0, 1, 0);
-			world.addLight(spotLight);
+//			world.addLight(spotLight);
 			scene.setLightLevel(0.1f);
 			
 			long seed = System.nanoTime();

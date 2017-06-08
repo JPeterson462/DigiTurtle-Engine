@@ -40,9 +40,10 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	private Shader defaultGeometryShader, normalMappedGeometryShader, 
 		defaultSkeletalGeometryShader, normalMappedSkeletalGeometryShader, 
 		pointLightShader, ambientLightShader, fxaaShader, terrainShader, 
-		dofShader, skyShader, fogShader, hdrShader;
+		dofShader, skyShader, fogShader, hdrShader, bloomShader, blurShader;
 	
-	private Framebuffer geometryPass, lightingPass, fxaaPass, skyPass, dofPass, fogPass, hdrPass;
+	private Framebuffer geometryPass, lightingPass, fxaaPass, skyPass, dofPass, fogPass, hdrPass, 
+		bloomPass, blurPassH, blurPassV;
 	
 	private Geometry lightingFullscreenPass, postProcessingPass;
 	
@@ -68,6 +69,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		skyShader_projectionMatrix, skyShader_blendFactor;
 	private int fogShader_fogColor, fogShader_fogDensity, fogShader_fogDistance, 
 		fogShader_invProjectionMatrix, fogShader_invViewMatrix, fogShader_cameraPosition;
+	private int blurShader_horizontal;
 	
 	private Renderer renderer;
 	
@@ -89,6 +91,9 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		dofPass = renderer.createFramebuffer(1);
 		fogPass = renderer.createFramebuffer(1);
 		hdrPass = renderer.createFramebuffer(1);
+		bloomPass = renderer.createFloatingPointFramebuffer(1);
+		blurPassH = renderer.createFloatingPointFramebuffer(1);
+		blurPassV = renderer.createFloatingPointFramebuffer(1);
 		// Default Geometry
 		HashMap<Integer, String> attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
@@ -228,8 +233,24 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		hdrShader = renderer.createShader(getShader("postVertex"), getShader("hdrFragment"), attributes);
 		hdrShader.bind();
 		hdrShader.uploadInteger(hdrShader.getUniformLocation("diffuseTexture"), 0);
+		hdrShader.uploadInteger(hdrShader.getUniformLocation("bloomTexture"), 1);
 		hdrShader.uploadFloat(hdrShader.getUniformLocation("exposure"), graphicsSettings.hdrExposure);
 		hdrShader.unbind();
+		// Bloom Shaders
+		attributes = new HashMap<>();
+		attributes.put(0, "in_Position");
+		bloomShader = renderer.createShader(getShader("postVertex"), getShader("bloomExtractFragment"), attributes);
+		bloomShader.bind();
+		bloomShader.uploadInteger(bloomShader.getUniformLocation("diffuseTexture"), 0);
+		bloomShader.unbind();
+		attributes = new HashMap<>();
+		attributes.put(0, "in_Position");
+		blurShader = renderer.createShader(getShader("postVertex"), getShader("blurFragment"), attributes);
+		blurShader.bind();
+		blurShader_horizontal = blurShader.getUniformLocation("horizontal");
+		blurShader.uploadInteger(blurShader.getUniformLocation("diffuseTexture"), 0);
+		blurShader.uploadVector(blurShader.getUniformLocation("resolution"), new Vector2f(coreSettings.width, coreSettings.height));
+		blurShader.unbind();
 		// Fullscreen Pass
 		lightingFullscreenPass = createFullscreenQuad(renderer);
 		postProcessingPass = createPostProcessingPass(renderer);
@@ -389,6 +410,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 
 	@Override
 	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
+		// Render
 		lightingPass.bind();
 		renderAmbientLights(lightLevel, ambientLightShader, camera, lights);
 		renderer.setBlendMode(BlendMode.ADDITIVE);
@@ -396,11 +418,43 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		renderer.setBlendMode(BlendMode.DEFAULT);
 		lightingPass.unbind();
 		lastPass = lightingPass;
+		// Bloom
+		bloomPass.bind();
+		postProcessingPass.bind();
+		bloomShader.bind();
+		lightingPass.getColorTexture(0).activeTexture(0);
+		lightingPass.getColorTexture(0).bind();
+		postProcessingPass.render();
+		bloomShader.unbind();
+		postProcessingPass.unbind();
+		bloomPass.unbind();
+		lastPass = bloomPass;
+		postProcessingPass.bind();
+		blurShader.bind();
+		Texture texture = bloomPass.getColorTexture(0);
+		blurPassH.bind();
+		texture.activeTexture(0);
+		texture.bind();
+		blurShader.uploadInteger(blurShader_horizontal, 1);
+		postProcessingPass.render();
+		blurPassH.unbind();
+		blurPassV.bind();
+		blurPassH.getColorTexture(0).activeTexture(0);
+		blurPassH.getColorTexture(0).bind();
+		blurShader.uploadInteger(blurShader_horizontal, 0);
+		postProcessingPass.render();
+		blurPassV.unbind();
+		blurShader.unbind();
+		postProcessingPass.unbind();
+		lastPass = blurPassV;
+		// HDR
 		hdrPass.bind();
 		postProcessingPass.bind();
 		hdrShader.bind();
 		lightingPass.getColorTexture(0).activeTexture(0);
 		lightingPass.getColorTexture(0).bind();
+		lastPass.getColorTexture(0).activeTexture(1);
+		lastPass.getColorTexture(0).bind();
 		postProcessingPass.render();
 		hdrShader.unbind();
 		postProcessingPass.unbind();
@@ -567,6 +621,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 //		GL11.glTexCoord2f(1, 1); GL11.glVertex2f(1, 1);
 //		GL11.glTexCoord2f(0, 1); GL11.glVertex2f(-1, 1);
 //		GL11.glEnd();
+		
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, lastPass.getColorTexture(0).getID());
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glTexCoord2f(0, 0); GL11.glVertex2f(-1, -1);

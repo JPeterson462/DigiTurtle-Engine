@@ -68,7 +68,7 @@ public class GLRenderer implements Renderer {
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL11.glDepthFunc(GL11.GL_LEQUAL);
 		GL11.glEnable(GL30.GL_CLIP_DISTANCE0);
-		GL11.glEnable(GL13.GL_MULTISAMPLE);
+//		GL11.glEnable(GL13.GL_MULTISAMPLE);
 		GL11.glViewport(0, 0, width, height);
 		GL11.glClearColor(coreSettings.backgroundColor.x, coreSettings.backgroundColor.y, coreSettings.backgroundColor.z, 0);
 		initFunction.call();

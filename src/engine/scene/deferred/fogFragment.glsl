@@ -46,7 +46,9 @@ void main(void) {
 	vec4 foreground = mix(rFogColor, texVal, fogFactor);
 	vec4 background = texture2D(skyTexture, pass_TextureCoord);
 	out_Color = foreground + background * (1.0 - foreground.a);
+	out_Color.a = texVal.a;
 	if (depth > far) {
-		out_Color = background * (1.0 - fogDensity) + rFogColor * fogDensity;
+		out_Color = mix(background, rFogColor, fogDensity);
+		out_Color.a = background.a;
 	}
 }

@@ -80,12 +80,15 @@
 	- Finished fog
 	- Updated FXAA
 	- Added HDR
+6/7/17:
+	- Updated fog (smoother edge between foreground and background)
+	- Started bloom
 
 -- physics jittering
 -- fix skybox blender
 -- another fog function?
 -- optimize physics
--- SRAA
+-- SRAA?
 
 https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
 
@@ -99,7 +102,7 @@ TIMELINE
 		// https://docs.unity3d.com/Manual/PostProcessing.html
 *		- Depth of Field
 *		- Fix FXAA (Faster and better)
-		- Bloom
+*		- Bloom
 *		- Tone Mapping
 *		- HDR
 		- SSAO

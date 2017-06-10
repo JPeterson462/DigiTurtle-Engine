@@ -83,12 +83,17 @@
 6/7/17:
 	- Updated fog (smoother edge between foreground and background)
 	- Started bloom
+6/8/17:
+	- Faster bloom
+	- Started GPU profiling
 
 -- physics jittering
 -- fix skybox blender
--- another fog function?
+-- fix fog function
 -- optimize physics
 -- SRAA?
+-- blur for bloom?
+-- is FXAA looking good?
 
 https://mtnphil.wordpress.com/2014/05/24/decals-deferred-rendering/
 

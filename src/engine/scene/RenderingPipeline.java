@@ -29,7 +29,7 @@ public interface RenderingPipeline {
 	
 	public void doDOFPass();
 	
-	public void doFogPass(Skybox skybox, Matrix4f invViewMatrix, Matrix4f invProjectionMatrix, Vector3f cameraPosition);
+	public void doFogPass(Skybox skybox);
 	
 	public void doFinalRender();
 	

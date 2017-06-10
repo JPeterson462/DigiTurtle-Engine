@@ -136,7 +136,8 @@ public class Test {
 			crateModel.getMeshes().get(0).setMaterial(crateMaterial);
 			Entity crate = new Entity();
 			crate.setScale(new Vector3f(0.05f));
-			crate.setPosition(new Vector3f(10, 0, 10));
+//			crate.setPosition(new Vector3f(10, 0, 10));
+			crate.setPosition(new Vector3f(100, 0, 100));
 			crate.addComponent(new MeshComponent(crateModel, renderer, false));
 			crate.addComponent(new PhysicalComponent(crate.getPosition(), crate.getOrientation(), 5, new PolyhedronBounds(builder.buildCube(17))) {
 				@Override
@@ -170,7 +171,7 @@ public class Test {
 			world.addEntity(entity);
 			
 			world.addLight(new AmbientLight(1, 1, 1));
-			PointLight pointLight = new PointLight(1, 1, 1);
+			PointLight pointLight = new PointLight(2, 2, 2);
 			pointLight.setRange(20);
 			pointLight.setPosition(0, 0, 0);
 			world.addLight(pointLight);
@@ -210,7 +211,7 @@ public class Test {
 					new AssetInputStream("sky/bottom.png"), new AssetInputStream("sky/back.png"), 
 					new AssetInputStream("sky/front.png"));
 			world.setSkybox(new Skybox(texture1_, texture2_, new SkyboxBlender(24, 5, 8, 21), new Vector3f(0.9f, 0.9f, 0.9f)));
-			world.getSkybox().setFogDensity(0.2f);
+			world.getSkybox().setFogDensity(0.5f);
 			world.getSkybox().setFogDistance(100);
 			
 			soundSystem = new ALSoundSystem();

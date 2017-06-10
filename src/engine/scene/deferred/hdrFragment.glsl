@@ -20,5 +20,5 @@ void main(void) {
     // Gamma correction 
     mapped = pow(mapped, vec3(1.0 / gamma));
   
-    out_Color = vec4(mapped, 1.0);
+    out_Color = vec4(clamp(mapped, 0.0, 1.0), 1.0);
 }

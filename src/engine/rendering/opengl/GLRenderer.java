@@ -137,7 +137,12 @@ public class GLRenderer implements Renderer {
 	public Framebuffer createFramebuffer(int width, int height, int colorAttachments) {
 		return new GLFramebuffer(width, height, colorAttachments, this.width, this.height, GL11.GL_UNSIGNED_BYTE);
 	}
-	
+
+	@Override
+	public Framebuffer createFloatingPointFramebuffer(int width, int height, int colorAttachments) {
+		return new GLFramebuffer(width, height, colorAttachments, this.width, this.height, GL11.GL_FLOAT);
+	}
+
 	@Override
 	public void destroyContext(FreeFunction deinitFunction) {
 		deinitFunction.call();

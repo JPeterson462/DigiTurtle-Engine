@@ -1,7 +1,5 @@
 #version 330
 
-#define GAMMA_CORRECTION
-
 uniform sampler2D diffuseTexture;
 uniform sampler2D normalTexture;
 uniform sampler2D depthTexture;
@@ -105,14 +103,6 @@ void main(void) {
 	vec3 viewDir = normalize(viewPos - position);
 	vec4 lightDir = lightComputeDir(position, vec4(lightColor, 1.0), lightPos, lightDirPacked);
 	vec2 light = computeLighting(position, normal, viewDir, lightDir, 32.0);
-
-#ifdef GAMMA_CORRECTION
-	vec4 gammaExponent = vec4(vec3(1.0 / 2.2), 1.0);
-#else
-	vec4 gammaExponent = vec4(1.0);
-#endif
-
 	vec4 color = vec4(light.x * diffuseColor.xyz + light.y * vec3(1.0), 1.0);
-	//out_Color = vec4(pow(color, gammaExponent), 1.0);
-	out_Color = pow(color, gammaExponent) * vec4(lightColor, 1.0) * computeOcclusion(position, lightPos.xyz, viewPos);
+	out_Color = color * vec4(lightColor, 1.0) * computeOcclusion(position, lightPos.xyz, viewPos);
 }

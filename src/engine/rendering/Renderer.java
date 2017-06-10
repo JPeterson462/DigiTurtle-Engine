@@ -30,7 +30,9 @@ public interface Renderer {
 	public Framebuffer createFloatingPointFramebuffer(int colorAttachments);
 
 	public Framebuffer createFramebuffer(int width, int height, int colorAttachments);
-	
+
+	public Framebuffer createFloatingPointFramebuffer(int width, int height, int colorAttachments);
+
 	public void destroyContext(FreeFunction deinitFunction);
 	
 	public boolean validContext();

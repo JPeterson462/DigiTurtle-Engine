@@ -45,7 +45,7 @@ public class ALCaptureDevice {
 	
 	public ShortBuffer sampleDevice() {
 		ALC11.alcCaptureStart(device);
-		int samples = ALC10.alcGetInteger(device, ALC11.ALC_CAPTURE_SAMPLES);System.out.println(samples);
+		int samples = ALC10.alcGetInteger(device, ALC11.ALC_CAPTURE_SAMPLES);
 		if (samples == 0) {
 			return null;
 		}

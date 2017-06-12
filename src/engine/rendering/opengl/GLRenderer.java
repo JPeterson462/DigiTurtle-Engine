@@ -124,6 +124,11 @@ public class GLRenderer implements Renderer {
 	}
 
 	@Override
+	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, HashMap<String, String> replacements) {
+		return new GLShader(vertexStream, fragmentStream, attributes, replacements);
+	}
+	
+	@Override
 	public Framebuffer createFramebuffer(int colorAttachments) {
 		return createFramebuffer(width, height, colorAttachments);
 	}

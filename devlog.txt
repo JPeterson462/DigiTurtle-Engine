@@ -86,6 +86,14 @@
 6/8/17:
 	- Faster bloom
 	- Started GPU profiling
+6/10-12/17:
+	- Optimizing shaders
+	
+~ Merge fog and depth of field
+~ Moved ambient light calculation to HDR shader
+~ Specialized lighting shaders
+
+-- light volumes
 
 -- physics jittering
 -- fix skybox blender

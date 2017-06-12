@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.joml.Vector3f;
+import org.joml.Vector4f;
+
 import engine.rendering.Geometry;
 import engine.scene.MeshComponent;
 import utils.Receiver;
@@ -26,11 +29,21 @@ public class World {
 	
 	private float width, height, resolution;
 	
+	private Vector4f ambientLight = new Vector4f();
+	
 	public World(float chunkWidth, float chunkHeight, float resolution, int width, int height) {
 		this.width = chunkWidth;
 		this.height = chunkHeight;
 		this.resolution = resolution;
 		terrain = new TerrainChunk[width][height];
+	}
+	
+	public Vector4f getAmbientLight() {
+		return ambientLight;
+	}
+	
+	public void setAmbientLight(Vector3f lightColor, float lightLevel) {
+		ambientLight.set(lightColor, lightLevel);
 	}
 	
 	public Skybox getSkybox() {

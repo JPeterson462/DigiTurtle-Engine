@@ -2,8 +2,11 @@
 
 uniform sampler2D diffuseTexture;
 uniform sampler2D bloomTexture;
+uniform sampler2D sceneTexture;
 
 uniform float exposure;
+
+uniform vec4 ambientLight;
 
 in vec2 pass_TextureCoord;
 
@@ -13,7 +16,8 @@ out vec4 out_Color;
 
 void main(void) {
 	const float gamma = 2.2;
-    vec3 hdrColor = texture2D(diffuseTexture, pass_TextureCoord).rgb + texture2D(bloomTexture, pass_TextureCoord).rgb;
+    vec3 hdrColor = texture2D(diffuseTexture, pass_TextureCoord).rgb + texture2D(bloomTexture, pass_TextureCoord).rgb + 
+    	texture2D(sceneTexture, pass_TextureCoord).rgb * ambientLight.a * ambientLight.a * ambientLight.rgb;
   
     // Exposure tone mapping
     vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);

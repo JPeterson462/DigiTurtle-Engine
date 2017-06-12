@@ -31,8 +31,9 @@ public class GLProgram implements GLResource {
 		GL20.glAttachShader(id, shader);
 	}
 	
-	public void link() {
+	public boolean link() {
 		GL20.glLinkProgram(id);
+		return GL20.glGetProgrami(id, GL20.GL_LINK_STATUS) == GL11.GL_TRUE;
 	}
 	
 	public void validate() {

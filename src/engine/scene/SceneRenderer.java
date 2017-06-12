@@ -44,10 +44,9 @@ public class SceneRenderer {
 		pipeline.doGeometryPass(camera, world.getDefaultEntities(), world.getNormalMappedEntities(),
 				world.getDefaultSkeletalEntities(), world.getNormalMappedSkeletalEntities(), 
 				world.getTerrain(), world.getSkybox());
-		pipeline.doLightingPass(lightLevel, camera, world.getLights(), cameraPosition);
+		pipeline.doLightingPass(lightLevel, camera, world.getLights(), cameraPosition, world.getAmbientLight());
 		pipeline.doFXAAPass();
-		pipeline.doDOFPass();
-		pipeline.doFogPass(world.getSkybox());
+		pipeline.doEnvironmentPass(world.getSkybox());
 		pipeline.doFinalRender();
 		// TODO
 		GPUProfiler.endFrame();

@@ -41,10 +41,46 @@ public class GLShader implements Shader {
 		for (Map.Entry<Integer, String> attribute : attributes.entrySet()) {
 			program.bindAttribute(attribute.getKey(), attribute.getValue());
 		}
-		if (!program.compile()) {
+		if (!program.link()) {
 			Log.error("Program did not compile: " + program.getLog());
 			throw new IllegalStateException();
 		}
+	}
+
+	public GLShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, HashMap<String, String> replacements) {
+		program = new GLProgram();
+		vertexShader = new library.opengl.GLShader(GL20.GL_VERTEX_SHADER);
+		String vertexSource = IOUtils.readStringQuietly(vertexStream);
+		vertexSource = substitute(vertexSource, replacements);
+		vertexShader.source(vertexSource);
+		if (!vertexShader.compile()) {
+			Log.error("Vertex Shader did not compile: " + vertexShader.getLog());
+			throw new IllegalStateException();
+		}
+		fragmentShader = new library.opengl.GLShader(GL20.GL_FRAGMENT_SHADER);
+		String fragmentSource = IOUtils.readStringQuietly(fragmentStream);
+		fragmentSource = substitute(fragmentSource, replacements);
+		fragmentShader.source(fragmentSource);
+		if (!fragmentShader.compile()) {
+			Log.error("Fragment Shader did not compile: " + fragmentShader.getLog());
+			throw new IllegalStateException();
+		}
+		program.attach(vertexShader.getID());
+		program.attach(fragmentShader.getID());
+		for (Map.Entry<Integer, String> attribute : attributes.entrySet()) {
+			program.bindAttribute(attribute.getKey(), attribute.getValue());
+		}
+		if (!program.link()) {
+			Log.error("Program did not compile: " + program.getLog());
+			throw new IllegalStateException();
+		}
+	}
+	
+	private String substitute(String initial, HashMap<String, String> replacements) {
+		for (Map.Entry<String, String> replacement : replacements.entrySet()) {
+			initial = initial.replaceAll("\\{\\{" + replacement.getKey() + "\\}\\}", replacement.getValue());
+		}
+		return initial;
 	}
 	
 	@Override

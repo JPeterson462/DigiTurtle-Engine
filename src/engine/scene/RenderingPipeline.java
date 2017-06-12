@@ -3,8 +3,8 @@ package engine.scene;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import engine.Camera;
 import engine.rendering.Geometry;
@@ -23,13 +23,11 @@ public interface RenderingPipeline {
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> normalMappedSkeletalEntities,
 			TerrainChunk[][] terrain, Skybox skybox);
 	
-	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition);
+	public void doLightingPass(float lightLevel, Camera camera, ArrayList<Light> lights, Vector3f cameraPosition, Vector4f ambientLight);
+	
+	public void doEnvironmentPass(Skybox skybox);
 	
 	public void doFXAAPass();
-	
-	public void doDOFPass();
-	
-	public void doFogPass(Skybox skybox);
 	
 	public void doFinalRender();
 	

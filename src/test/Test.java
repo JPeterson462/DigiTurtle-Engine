@@ -31,7 +31,6 @@ import engine.text.TextBuffer;
 import engine.text.TextEffects;
 import engine.text.TextRenderer;
 import engine.text.opengl.GLTextRenderer;
-import engine.world.AmbientLight;
 import engine.world.Entity;
 import engine.world.EntityTag;
 import engine.world.PointLight;
@@ -125,7 +124,8 @@ public class Test {
 //			entity.addComponent(mesh);
 //			scene.addEntity(entity);
 
-			world = new World(500, 500, 10, 2, 2);
+			world = new World(500, 500, 10, 2, 2); // 5.6ms
+//			world = new World(250, 250, 10, 2, 2); // 4.0ms
 			
 			PolyhedronBuilder builder = new PolyhedronBuilder();
 			
@@ -170,11 +170,20 @@ public class Test {
 			
 			world.addEntity(entity);
 			
-			world.addLight(new AmbientLight(1, 1, 1));
+//			world.addLight(new AmbientLight(1, 1, 1));
+			world.setAmbientLight(new Vector3f(1, 1, 1), 0.5f);
 			PointLight pointLight = new PointLight(2, 2, 2);
 			pointLight.setRange(20);
 			pointLight.setPosition(0, 0, 0);
 			world.addLight(pointLight);
+			PointLight pointLight2 = new PointLight(2, 2, 2);
+			pointLight2.setRange(20);
+			pointLight2.setPosition(0, 0, 2);
+			world.addLight(pointLight2);
+			PointLight pointLight3 = new PointLight(2, 2, 2);
+			pointLight3.setRange(20);
+			pointLight3.setPosition(2, 0, 2);
+			world.addLight(pointLight3);
 //			DirectionalLight directionalLight = new DirectionalLight(1, 1, 0);
 //			directionalLight.setDirection(-1, -1, -1);
 //			world.addLight(directionalLight);
@@ -184,7 +193,7 @@ public class Test {
 			spotLight.setAngle((float) Math.PI / 180f);
 			spotLight.setDirection(0, 1, 0);
 //			world.addLight(spotLight);
-			scene.setLightLevel(0.1f);
+//			scene.setLightLevel(0.1f);
 			
 			long seed = System.nanoTime();
 			OpenSimplexNoise noise = new OpenSimplexNoise(seed);

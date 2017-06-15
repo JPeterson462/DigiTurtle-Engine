@@ -27,6 +27,8 @@ const float kPi = 3.14159265;
 const float kShininess = 16.0;
 const float kEnergyConservation = (8.0 + kShininess) / (8.0 * kPi);
 
+const vec3 specularColor = vec3(1.0);
+
 float getAttenuation(float distance) {
 	if (distance > lightRadius) {
 		return 0.0;
@@ -50,7 +52,7 @@ float computeSpecular(vec3 normal, vec3 viewDir, vec3 lightDir, float shininess)
 }
 
 float computeDiffuse(vec3 normal, vec3 viewDir, vec3 lightDir) {
-	return max(0.0, dot(normal, lightDir));
+	return abs(dot(normal, lightDir));
 }
 
 vec2 computeLighting(vec3 position, vec3 normal, vec3 viewDir, vec4 lightDir, float shininess) {
@@ -104,6 +106,6 @@ void main(void) {
 #endif
 	vec4 lightDir = lightComputeDir(position, vec4(lightColor, 1.0), lightPos, lightDirPacked);
 	vec2 light = computeLighting(position, normal, viewDir, lightDir, 32.0);
-	vec4 color = vec4(light.x * diffuseColor.xyz + light.y * vec3(1.0), 1.0);
+	vec4 color = vec4(light.x * diffuseColor.xyz + light.y * specularColor, 1.0);
 	out_Color = color * vec4(lightColor, 1.0);
 }

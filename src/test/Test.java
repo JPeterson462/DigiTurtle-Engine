@@ -172,17 +172,17 @@ public class Test {
 			
 //			world.addLight(new AmbientLight(1, 1, 1));
 			world.setAmbientLight(new Vector3f(1, 1, 1), 0.5f);
-			PointLight pointLight = new PointLight(2, 2, 2);
+			PointLight pointLight = new PointLight(1, 1, 1);
 			pointLight.setRange(20);
 			pointLight.setPosition(0, 0, 0);
-			world.addLight(pointLight);
-			PointLight pointLight2 = new PointLight(2, 2, 2);
+//			world.addLight(pointLight);
+			PointLight pointLight2 = new PointLight(1, 0, 1);
 			pointLight2.setRange(20);
-			pointLight2.setPosition(0, 0, 2);
-			world.addLight(pointLight2);
-			PointLight pointLight3 = new PointLight(2, 2, 2);
-			pointLight3.setRange(20);
-			pointLight3.setPosition(2, 0, 2);
+			pointLight2.setPosition(0, 0, 0);
+//			world.addLight(pointLight2);
+			PointLight pointLight3 = new PointLight(1, 1, 0);
+			pointLight3.setRange(5);
+			pointLight3.setPosition(0, 0, 0);
 			world.addLight(pointLight3);
 //			DirectionalLight directionalLight = new DirectionalLight(1, 1, 0);
 //			directionalLight.setDirection(-1, -1, -1);
@@ -205,7 +205,8 @@ public class Test {
 			Texture bTexture = renderer.createTexture(new AssetInputStream("path.png"), true);
 			Texture aTexture = renderer.createTexture(new AssetInputStream("grass.png"), true);
 			TerrainTexturePack pack = new TerrainTexturePack(rTexture, gTexture, bTexture, aTexture, blendMap);
-			TerrainGenerator gen = (x, y) -> 15 * (float) noise.eval(x * noiseResolution, y * noiseResolution);
+//			TerrainGenerator gen = (x, y) -> 15 * (float) noise.eval(x * noiseResolution, y * noiseResolution);
+			TerrainGenerator gen = (x, y) -> 0;
 			world.setTerrain(0, 0, gen, pack);
 			world.setTerrain(1, 0, gen, pack);
 			world.setTerrain(0, 1, gen, pack);
@@ -220,7 +221,7 @@ public class Test {
 					new AssetInputStream("sky/bottom.png"), new AssetInputStream("sky/back.png"), 
 					new AssetInputStream("sky/front.png"));
 			world.setSkybox(new Skybox(texture1_, texture2_, new SkyboxBlender(24, 5, 8, 21), new Vector3f(0.9f, 0.9f, 0.9f)));
-			world.getSkybox().setFogDensity(0.5f);
+			world.getSkybox().setFogDensity(0.1f);
 			world.getSkybox().setFogDistance(100);
 			
 			soundSystem = new ALSoundSystem();
@@ -230,7 +231,7 @@ public class Test {
 			AudioStream stream = AudioDecoderLibrary.findDecoder("ogg").openStream(new AssetInputStream("01_Critical_Acclaim.ogx.ogg"), data);
 			music = soundSystem.createMusic(stream, data);
 			music.setLooping(true);
-			music.play();
+//			music.play();
 			
 			particleRenderer = new ParticleRenderer(renderer, camera, new Vector2f(coreSettings.width, coreSettings.height));
 			ParticleEmitter emitter0 = new BasicParticleEmitter(camera, aTexture, new Vector3f(0, 12, 0), 0.01f, 5f, 0.4f, 2, 10, 3f, 0.1f, 0.1f, 0.1f, new int[] { 3, 3 });
@@ -258,6 +259,7 @@ public class Test {
 			//cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)), dist, dist * (float) Math.sin(Math.toRadians(t)));
 			camera.setPosition(cameraPosition);
 			camera.setYaw(-45);
+//								camera.setYaw(90);
 			camera.setPitch(15);
 			//camera.setYaw((float) t);
 //			camera.setYaw(180);

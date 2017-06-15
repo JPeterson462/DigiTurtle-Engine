@@ -132,7 +132,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		// FXAA Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		fxaaShader = renderer.createShader(getShader("postVertex"), getShader("fxaaFragment"), attributes);
+		fxaaShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/fxaaFragment"), attributes);
 		fxaaShader.bind();
 		fxaaShader.uploadInteger(fxaaShader.getUniformLocation("diffuseTexture"), 0);
 		fxaaShader.uploadVector(fxaaShader.getUniformLocation("resolution"), new Vector2f(coreSettings.width, coreSettings.height));
@@ -152,7 +152,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		// Blur Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		blurShader = renderer.createShader(getShader("postVertex"), getShader("blurFragment"), attributes);
+		blurShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/blurFragment"), attributes);
 		blurShader.bind();
 //		blurShader_horizontal = blurShader.getUniformLocation("horizontal");
 		blurShader.uploadInteger(blurShader.getUniformLocation("diffuseTexture"), 0);
@@ -161,14 +161,14 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		// Final Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		finalShader = renderer.createShader(getShader("postVertex"), getShader("basicFragment"), attributes);
+		finalShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("basicFragment"), attributes);
 		finalShader.bind();
 		finalShader.uploadInteger(finalShader.getUniformLocation("diffuseTexture"), 0);
 		finalShader.unbind();
 		// Environment Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		environmentShader = renderer.createShader(getShader("postVertex"), getShader("environmentFragment"), attributes);
+		environmentShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/environmentFragment"), attributes);
 		environmentShader.bind();
 		environmentShader.uploadInteger(environmentShader.getUniformLocation("diffuseTexture"), 0);
 		environmentShader.uploadInteger(environmentShader.getUniformLocation("depthTexture"), 1);

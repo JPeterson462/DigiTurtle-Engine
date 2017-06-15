@@ -88,12 +88,14 @@
 	- Started GPU profiling
 6/10-12/17:
 	- Optimizing shaders
+	- New lighting shaders
 	
 ~ Merge fog and depth of field
 ~ Moved ambient light calculation to HDR shader
 ~ Specialized lighting shaders
 
 -- light volumes
+-- lights in batches of N
 
 -- physics jittering
 -- fix skybox blender

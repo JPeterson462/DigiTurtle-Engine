@@ -90,7 +90,7 @@ public class DeferredLightingPipeline {
 		pointLightShader_invProjectionMatrix = pointLightShader.getUniformLocation("invProjectionMatrix");
 		pointLightShader.unbind();
 		lightDefines.put("type", "2");
-		spotLightShader = renderer.createShader(getShader("lightingVertex"), getShader("lightingFragment"), attributes, lightDefines, coreSettings.shaderFinder);
+		spotLightShader = renderer.createShader(getShader("lightVertex"), getShader("spotLightFragment"), attributes, lightDefines, coreSettings.shaderFinder);
 		spotLightShader.bind();
 		spotLightShader_radius = spotLightShader.getUniformLocation("radius");
 		spotLightShader_modelMatrix = spotLightShader.getUniformLocation("modelMatrix");

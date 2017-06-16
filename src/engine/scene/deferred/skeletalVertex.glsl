@@ -16,6 +16,8 @@ in vec3 in_Weights;
 
 out vec2 pass_TextureCoord;
 out vec3 pass_Normal;
+out vec3 pass_ViewSpacePos;
+out mat3 pass_NormalMatrix;
 
 void main(void) {
 	vec4 totalLocalPos = vec4(0.0);
@@ -32,7 +34,9 @@ void main(void) {
 
 	vec4 worldPosition = modelMatrix * totalLocalPos;
 	vec4 positionRelativeToCamera = viewMatrix * worldPosition;
+	pass_ViewSpacePos = positionRelativeToCamera.xyz;
 	gl_Position = projectionMatrix * positionRelativeToCamera;
 	pass_TextureCoord = in_TextureCoord;
 	pass_Normal = totalNormal.xyz;
+	pass_NormalMatrix = mat3(transpose(inverse(viewMatrix * modelMatrix)));
 }

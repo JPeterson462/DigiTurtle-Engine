@@ -11,9 +11,8 @@ uniform sampler2D materialTexture;
 
 uniform vec3 lightColor;
 uniform vec3 eyePosition;
-uniform float radius;
 
-uniform vec3 lightPosition;
+uniform vec3 lightDirection;
 
 in vec2 pass_TextureCoord;
 
@@ -28,27 +27,20 @@ void main(void) {
 	float shininess = material.r * MAX_SHININESS;
 	vec3 specularColor = vec3(material.g);
 	
-	vec3 distanceToLight = lightPosition - eyeSpace.xyz;
-	float distance = length(distanceToLight);
-	if (distance > radius) {
-		discard;
-	}
-	vec3 lightDir = normalize(distanceToLight);
 	vec3 normal = texture2D(normalTexture, pass_TextureCoord).rgb * 2.0 - 1.0;
 	vec3 albedo = texture2D(diffuseTexture, pass_TextureCoord).rgb;
-	float attenuation = 1.0 - clamp(distance / radius, 0.0, 1.0);
 	
-	float diffuseFactor = dot(normal, lightDir);
-	if (diffuseFactor <= 0.0) {
+	float diffuseFactor = max(dot(normal, normalize(lightDirection)), 0.0);
+	if (diffuseFactor == 0.0) {
 		discard;
 	}
-	vec3 diffuse = diffuseFactor * albedo * lightColor * attenuation;
+	vec3 diffuse = diffuseFactor * albedo * lightColor;
 	
 	vec3 viewDir = normalize(0 - eyeSpace.xyz);
-	vec3 halfwayDir = normalize(lightDir + viewDir);
+	vec3 halfwayDir = normalize(lightDirection + viewDir);
 	float specularCoefficient = max(dot(halfwayDir, normal), 0.0);
 	float specularFactor = pow(specularCoefficient, shininess);
-	vec3 specular = specularFactor * specularColor * lightColor * attenuation;
+	vec3 specular = specularFactor * specularColor * lightColor;
 	
 	out_Color = vec4(diffuse + specular, 1.0);
 

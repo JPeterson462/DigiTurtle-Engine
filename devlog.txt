@@ -89,6 +89,10 @@
 6/10-12/17:
 	- Optimizing shaders
 	- New lighting shaders
+6/15/17:
+	- Rewrote point lights, spot lights, and directional lights
+	- Refactored lighting code
+	- Custom import API for shaders ('#file "..."')
 	
 ~ Merge fog and depth of field
 ~ Moved ambient light calculation to HDR shader
@@ -96,6 +100,8 @@
 
 -- light volumes
 -- lights in batches of N
+-- sending material?
+-- packing normal? (in vec2)
 
 -- physics jittering
 -- fix skybox blender
@@ -128,10 +134,10 @@ TIMELINE
 		- Particle Effects
 *	5. Window Icons
 	6. Lighting
-		- Fix lighting calculations (softer edges) (better geometry for passes)
-		- Materials
+*		- Fix lighting calculations (softer edges) (better geometry for passes)
+*		- Materials
 		- Occlusion calculations
-		- Project Lighting (i.e. Position) with View Matrix
+*		- Project Lighting (i.e. Position) with View Matrix
 	7. Decal and Transparency Passes
 	8. Controller Input
 		- First Person Movement
@@ -164,15 +170,9 @@ TIMELINE
 
 TODO
 	- Shadows
-	- OBJ Material Loading?
 	- Music instance that waits for audio rather than ending
 	- Distance field font rendering: Small fonts
 	- Percentage closer filtering
-	- Shaders
-		Lighting
-		- Fix cone light falloff
-		- Project vectors with view matrix (v' = view * v)
-		Materials
 	- Decal and transparency passes (others?)
 	- "God rays"
 	- Watch for z-fighting

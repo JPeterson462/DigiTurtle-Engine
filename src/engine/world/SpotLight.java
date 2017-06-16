@@ -6,7 +6,7 @@ public class SpotLight implements Light {
 
 	private Vector3f position, direction, color;
 	
-	private float range, packedAngle;
+	private float range, angle;
 	
 	public SpotLight(float r, float g, float b) {
 		position = new Vector3f();
@@ -23,24 +23,14 @@ public class SpotLight implements Light {
 		this.range = range;
 	}
 
-	public float getPackedAngle() {
-		return packedAngle;
+	public float getAngle() {
+		return angle;
 	}
 	
-	public void setAngle(float angleRadians) {
-		setAngle(0, angleRadians / 2f);
+	public void setAngle(float radians) {
+		angle = (float) Math.cos(radians);
 	}
 	
-	public void setAngle(float innerRadians, float outerRadians) {
-		float innerCos = (float) Math.cos(innerRadians);
-		float outerCos = (float) Math.cos(outerRadians);
-		packedAngle = (int) (innerCos * 1000);
-		if (((int) packedAngle) == ((int) (outerCos * 1000))) {
-			outerCos -= 0.001f;
-		}
-		packedAngle += outerCos;
-	}
-
 	public void setDirection(float x, float y, float z) {
 		direction.set(x, y, z);
 	}

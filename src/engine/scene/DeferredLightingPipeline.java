@@ -33,11 +33,11 @@ public class DeferredLightingPipeline {
 	private Framebuffer lightingPass, bloomPass, hdrPass;
 
 	private int pointLightShader_viewMatrix, pointLightShader_projectionMatrix, pointLightShader_modelMatrix,
-	pointLightShader_invProjectionMatrix, pointLightShader_near, pointLightShader_far, pointLightShader_radius;
-	private int spotLightShader_viewMatrix, spotLightShader_projectionMatrix,
-	spotLightShader_invViewProjectionMatrix, spotLightShader_near, spotLightShader_far;
-	private int directionalLightShader_viewMatrix, directionalLightShader_projectionMatrix,
-	directionalLightShader_invViewProjectionMatrix, directionalLightShader_near, directionalLightShader_far;
+		pointLightShader_invProjectionMatrix, pointLightShader_radius;
+	private int spotLightShader_viewMatrix, spotLightShader_projectionMatrix, spotLightShader_modelMatrix,
+		spotLightShader_invViewProjectionMatrix, spotLightShader_radius;
+	private int directionalLightShader_viewMatrix, directionalLightShader_projectionMatrix, directionalLightShader_modelMatrix,
+		directionalLightShader_invProjectionMatrix;
 	private int hdrShader_ambientLight;
 
 	private Renderer renderer;
@@ -60,7 +60,7 @@ public class DeferredLightingPipeline {
 		// HDR Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		hdrShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/hdrFragment"), attributes);
+		hdrShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/hdrFragment"), attributes, coreSettings.shaderFinder);
 		hdrShader.bind();
 		hdrShader.uploadInteger(hdrShader.getUniformLocation("diffuseTexture"), 0);
 		hdrShader.uploadInteger(hdrShader.getUniformLocation("bloomTexture"), 1);
@@ -71,42 +71,40 @@ public class DeferredLightingPipeline {
 		// Bloom Shaders
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		bloomShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/bloomExtractFragment"), attributes);
+		bloomShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/bloomExtractFragment"), attributes, coreSettings.shaderFinder);
 		bloomShader.bind();
 		bloomShader.uploadInteger(bloomShader.getUniformLocation("diffuseTexture"), 0);
 		bloomShader.unbind();
 		// General Light Shader
+		lightDefines.put("maxShininess", coreSettings.maxShininess);
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
 		lightDefines.put("type", "1");
-		pointLightShader = renderer.createShader(getShader("pointLightVertex"), getShader("pointLightFragment"), attributes, lightDefines);
+		pointLightShader = renderer.createShader(getShader("lightVertex"), getShader("pointLightFragment"), attributes, lightDefines, coreSettings.shaderFinder);
 		pointLightShader.bind();
 		pointLightShader_radius = pointLightShader.getUniformLocation("radius");
 		pointLightShader_modelMatrix = pointLightShader.getUniformLocation("modelMatrix");
 		pointLightShader_viewMatrix = pointLightShader.getUniformLocation("viewMatrix");
 		pointLightShader_projectionMatrix = pointLightShader.getUniformLocation("projectionMatrix");
 		pointLightShader_invProjectionMatrix = pointLightShader.getUniformLocation("invProjectionMatrix");
-		pointLightShader_near = pointLightShader.getUniformLocation("near");
-		pointLightShader_far = pointLightShader.getUniformLocation("far");
 		pointLightShader.unbind();
 		lightDefines.put("type", "2");
-		spotLightShader = renderer.createShader(getShader("lightingVertex"), getShader("lightingFragment"), attributes, lightDefines);
+		spotLightShader = renderer.createShader(getShader("lightingVertex"), getShader("lightingFragment"), attributes, lightDefines, coreSettings.shaderFinder);
 		spotLightShader.bind();
+		spotLightShader_radius = spotLightShader.getUniformLocation("radius");
+		spotLightShader_modelMatrix = spotLightShader.getUniformLocation("modelMatrix");
 		spotLightShader_viewMatrix = spotLightShader.getUniformLocation("viewMatrix");
 		spotLightShader_projectionMatrix = spotLightShader.getUniformLocation("projectionMatrix");
 		spotLightShader_invViewProjectionMatrix = spotLightShader.getUniformLocation("invViewProjectionMatrix");
-		spotLightShader_near = spotLightShader.getUniformLocation("near");
-		spotLightShader_far = spotLightShader.getUniformLocation("far");
 		spotLightShader.unbind();
 		lightDefines.put("type", "0");
-		directionalLightShader = renderer.createShader(getShader("lightingVertex"), getShader("lightingFragment"), attributes, lightDefines);
+		directionalLightShader = renderer.createShader(getShader("lightVertex"), getShader("directionalLightFragment"), attributes, lightDefines, coreSettings.shaderFinder);
 		directionalLightShader.bind();
+		directionalLightShader_modelMatrix = directionalLightShader.getUniformLocation("modelMatrix");
 		directionalLightShader_viewMatrix = directionalLightShader.getUniformLocation("viewMatrix");
 		directionalLightShader_projectionMatrix = directionalLightShader.getUniformLocation("projectionMatrix");
-		directionalLightShader_invViewProjectionMatrix = directionalLightShader.getUniformLocation("invViewProjectionMatrix");
-		directionalLightShader_near = directionalLightShader.getUniformLocation("near");
-		directionalLightShader_far = directionalLightShader.getUniformLocation("far");
+		directionalLightShader_invProjectionMatrix = directionalLightShader.getUniformLocation("invProjectionMatrix");
 		directionalLightShader.unbind();
 	}
 
@@ -196,38 +194,37 @@ public class DeferredLightingPipeline {
 
 	private Matrix4f inverseProjectionMatrix = new Matrix4f(), inverseViewMatrix = new Matrix4f();
 
-	private Vector4f lightPos = new Vector4f(), packedDir = new Vector4f();
-
 	private void renderLights(Camera camera, ArrayList<Light> lights, Vector3f cameraPosition) {
 		camera.getProjectionMatrix().invert(inverseProjectionMatrix);
 		camera.getViewMatrix().invert(inverseViewMatrix);
-		Matrix4f inverseViewProjection = new Matrix4f(inverseViewMatrix).mul(inverseProjectionMatrix);
 		getLightUniforms();
 		lightingFullscreenPass.bind();
 
 		Matrix4f lightMatrix = new Matrix4f();
 		
+		Vector4f pointLightPosition4 = new Vector4f();	
+		Vector3f pointLightPosition3 = new Vector3f();
 		pointLightShader.bind();
 		pointLightShader.uploadMatrix(pointLightShader_projectionMatrix, camera.getProjectionMatrix());
 		pointLightShader.uploadMatrix(pointLightShader_viewMatrix, camera.getViewMatrix());
 		pointLightShader.uploadMatrix(pointLightShader_invProjectionMatrix, inverseProjectionMatrix);
-		pointLightShader.uploadFloat(pointLightShader_near, graphicsSettings.near);
-		pointLightShader.uploadFloat(pointLightShader_far, graphicsSettings.far);
 		pointLightShader.uploadVector(pointLight_viewPosUniform, cameraPosition);
 		state.lastPass.getColorTexture(0).bind(0);
 		state.lastPass.getColorTexture(1).bind(1);
 		state.lastPass.getDepthTexture().bind(2);
+		state.lastPass.getColorTexture(2).bind(3);
 		for (int i = 0; i < lights.size(); i++) {
 			Light light = lights.get(i);
 			if (light instanceof PointLight) {
 				PointLight pointLight = (PointLight) light;
-				lightPos.set(pointLight.getPosition(), 1f / pointLight.getRange());
-				lightMatrix.identity().scale(pointLight.getRange());
+				lightMatrix.identity();
 				pointLightShader.uploadMatrix(pointLightShader_modelMatrix, lightMatrix);
 				pointLightShader.uploadFloat(pointLightShader_radius, pointLight.getRange());
 				pointLightShader.uploadVector(pointLight_lightColorUniform, pointLight.getColor());
-				pointLightShader.uploadVector(pointLight_lightPosUniform, pointLight.getPosition());
-//				pointLightShader.uploadVector(pointLight_lightPosUniform, lightPos);
+				pointLightPosition4.set(pointLight.getPosition(), 1);
+				camera.getViewMatrix().transform(pointLightPosition4);
+				pointLightPosition3.set(pointLightPosition4.x, pointLightPosition4.y, pointLightPosition4.z);
+				pointLightShader.uploadVector(pointLight_lightPosUniform, pointLightPosition3);
 				lightingFullscreenPass.render();
 			}
 		}
@@ -236,22 +233,23 @@ public class DeferredLightingPipeline {
 		spotLightShader.bind();
 		spotLightShader.uploadMatrix(spotLightShader_projectionMatrix, camera.getProjectionMatrix());
 		spotLightShader.uploadMatrix(spotLightShader_viewMatrix, camera.getViewMatrix());
-		spotLightShader.uploadMatrix(spotLightShader_invViewProjectionMatrix, inverseViewProjection);
-		spotLightShader.uploadFloat(spotLightShader_near, graphicsSettings.near);
-		spotLightShader.uploadFloat(spotLightShader_far, graphicsSettings.far);
+		spotLightShader.uploadMatrix(spotLightShader_invViewProjectionMatrix, inverseProjectionMatrix);
 		spotLightShader.uploadVector(spotLight_viewPosUniform, cameraPosition);
 		state.lastPass.getColorTexture(0).bind(0);
 		state.lastPass.getColorTexture(1).bind(1);
 		state.lastPass.getDepthTexture().bind(2);
+		state.lastPass.getColorTexture(2).bind(3);
 		for (int i = 0; i < lights.size(); i++) {
 			Light light = lights.get(i);
 			if (light instanceof SpotLight) {
 				SpotLight spotLight = (SpotLight) light;
-				lightPos.set(spotLight.getPosition(), 1f / spotLight.getRange());
-				packedDir.set(spotLight.getDirection(), spotLight.getPackedAngle());
+				lightMatrix.identity();
+				spotLightShader.uploadMatrix(spotLightShader_modelMatrix, lightMatrix);
+				spotLightShader.uploadFloat(spotLightShader_radius, spotLight.getRange());
+				spotLightShader.uploadFloat(spotLight_rangeUniform, spotLight.getAngle());
 				spotLightShader.uploadVector(spotLight_lightColorUniform, spotLight.getColor());
-				spotLightShader.uploadVector(spotLight_lightPosUniform, lightPos);
-				spotLightShader.uploadVector(spotLight_spotDirUniform, packedDir);
+				spotLightShader.uploadVector(spotLight_lightPosUniform, spotLight.getPosition());
+				spotLightShader.uploadVector(spotLight_spotDirUniform, spotLight.getDirection());
 				lightingFullscreenPass.render();
 			}
 		}
@@ -260,20 +258,20 @@ public class DeferredLightingPipeline {
 		directionalLightShader.bind();
 		directionalLightShader.uploadMatrix(directionalLightShader_projectionMatrix, camera.getProjectionMatrix());
 		directionalLightShader.uploadMatrix(directionalLightShader_viewMatrix, camera.getViewMatrix());
-		directionalLightShader.uploadMatrix(directionalLightShader_invViewProjectionMatrix, inverseViewProjection);
-		directionalLightShader.uploadFloat(directionalLightShader_near, graphicsSettings.near);
-		directionalLightShader.uploadFloat(directionalLightShader_far, graphicsSettings.far);
+		directionalLightShader.uploadMatrix(directionalLightShader_invProjectionMatrix, inverseProjectionMatrix);
 		directionalLightShader.uploadVector(directionalLight_viewPosUniform, cameraPosition);
 		state.lastPass.getColorTexture(0).bind(0);
 		state.lastPass.getColorTexture(1).bind(1);
 		state.lastPass.getDepthTexture().bind(2);
+		state.lastPass.getColorTexture(2).bind(3);
 		for (int i = 0; i < lights.size(); i++) {
 			Light light = lights.get(i);
 			if (light instanceof DirectionalLight) {
 				DirectionalLight directionalLight = (DirectionalLight) light;
-				lightPos.set(directionalLight.getDirection(), 0);
+				lightMatrix.identity();
+				directionalLightShader.uploadMatrix(directionalLightShader_modelMatrix, lightMatrix);
 				directionalLightShader.uploadVector(directionalLight_lightColorUniform, directionalLight.getColor());
-				directionalLightShader.uploadVector(directionalLight_lightPosUniform, lightPos);
+				directionalLightShader.uploadVector(directionalLight_lightDirectionUniform, directionalLight.getDirection());
 				lightingFullscreenPass.render();
 			}
 		}
@@ -284,8 +282,8 @@ public class DeferredLightingPipeline {
 	}
 
 	private int pointLight_lightColorUniform, pointLight_lightPosUniform, pointLight_viewPosUniform;
-	private int spotLight_lightColorUniform, spotLight_lightPosUniform, spotLight_viewPosUniform, spotLight_spotDirUniform;
-	private int directionalLight_lightColorUniform, directionalLight_lightPosUniform, directionalLight_viewPosUniform;
+	private int spotLight_lightColorUniform, spotLight_lightPosUniform, spotLight_viewPosUniform, spotLight_spotDirUniform, spotLight_rangeUniform;
+	private int directionalLight_lightColorUniform, directionalLight_lightDirectionUniform, directionalLight_viewPosUniform;
 	private boolean lightUniformsSet = false;
 
 	private void getLightUniforms() {
@@ -298,23 +296,27 @@ public class DeferredLightingPipeline {
 			pointLightShader.uploadInteger(pointLightShader.getUniformLocation("diffuseTexture"), 0);
 			pointLightShader.uploadInteger(pointLightShader.getUniformLocation("normalTexture"), 1);
 			pointLightShader.uploadInteger(pointLightShader.getUniformLocation("depthTexture"), 2);
+			pointLightShader.uploadInteger(pointLightShader.getUniformLocation("materialTexture"), 3);
 			pointLightShader.unbind();
 			spotLightShader.bind();
 			spotLight_lightColorUniform = spotLightShader.getUniformLocation("lightColor");
-			spotLight_lightPosUniform = spotLightShader.getUniformLocation("lightPos");
-			spotLight_viewPosUniform = spotLightShader.getUniformLocation("viewPos");
-			spotLight_spotDirUniform = spotLightShader.getUniformLocation("lightDirPacked");
+			spotLight_lightPosUniform = spotLightShader.getUniformLocation("lightPosition");
+			spotLight_viewPosUniform = spotLightShader.getUniformLocation("eyePosition");
+			spotLight_spotDirUniform = spotLightShader.getUniformLocation("lightDirection");
+			spotLight_rangeUniform = spotLightShader.getUniformLocation("lightRange");
 			spotLightShader.uploadInteger(spotLightShader.getUniformLocation("diffuseTexture"), 0);
 			spotLightShader.uploadInteger(spotLightShader.getUniformLocation("normalTexture"), 1);
 			spotLightShader.uploadInteger(spotLightShader.getUniformLocation("depthTexture"), 2);
+			spotLightShader.uploadInteger(spotLightShader.getUniformLocation("materialTexture"), 3);
 			spotLightShader.unbind();
 			directionalLightShader.bind();
 			directionalLight_lightColorUniform = directionalLightShader.getUniformLocation("lightColor");
-			directionalLight_lightPosUniform = directionalLightShader.getUniformLocation("lightPos");
-			directionalLight_viewPosUniform = directionalLightShader.getUniformLocation("viewPos");
+			directionalLight_lightDirectionUniform = directionalLightShader.getUniformLocation("lightDirection");
+			directionalLight_viewPosUniform = directionalLightShader.getUniformLocation("eyePosition");
 			directionalLightShader.uploadInteger(directionalLightShader.getUniformLocation("diffuseTexture"), 0);
 			directionalLightShader.uploadInteger(directionalLightShader.getUniformLocation("normalTexture"), 1);
 			directionalLightShader.uploadInteger(directionalLightShader.getUniformLocation("depthTexture"), 2);
+			directionalLightShader.uploadInteger(directionalLightShader.getUniformLocation("materialTexture"), 3);
 			directionalLightShader.unbind();
 		}
 	}

@@ -31,6 +31,7 @@ import engine.text.TextBuffer;
 import engine.text.TextEffects;
 import engine.text.TextRenderer;
 import engine.text.opengl.GLTextRenderer;
+import engine.world.DirectionalLight;
 import engine.world.Entity;
 import engine.world.EntityTag;
 import engine.world.PointLight;
@@ -110,6 +111,8 @@ public class Test {
 			Texture texture2 = renderer.createTexture(new AssetInputStream("crateNormal.png"), false);
 			
 			Material material = new Material();
+			material.setShininess(32);
+			material.setSpecularFactor(0);
 			material.setDiffuseTexture(new AssetInputStream("animatedDiffuse.png"));
 //			material.setNormalTexture(texture2);
 			camera = new FirstPersonCamera(coreSettings, graphicsSettings);
@@ -170,30 +173,31 @@ public class Test {
 			
 			world.addEntity(entity);
 			
-//			world.addLight(new AmbientLight(1, 1, 1));
-			world.setAmbientLight(new Vector3f(1, 1, 1), 0.5f);
+			float lightLevel = 0.0f;
+			world.setAmbientLight(new Vector3f(1, 1, 1), lightLevel);
 			PointLight pointLight = new PointLight(1, 1, 1);
 			pointLight.setRange(20);
 			pointLight.setPosition(0, 0, 0);
-//			world.addLight(pointLight);
+			world.addLight(pointLight);
 			PointLight pointLight2 = new PointLight(1, 0, 1);
 			pointLight2.setRange(20);
 			pointLight2.setPosition(0, 0, 0);
-//			world.addLight(pointLight2);
+			world.addLight(pointLight2);
 			PointLight pointLight3 = new PointLight(1, 1, 0);
-			pointLight3.setRange(5);
-			pointLight3.setPosition(0, 0, 0);
+			pointLight3.setRange(10);
+			pointLight3.setPosition(0, 2, 0);
 			world.addLight(pointLight3);
-//			DirectionalLight directionalLight = new DirectionalLight(1, 1, 0);
-//			directionalLight.setDirection(-1, -1, -1);
-//			world.addLight(directionalLight);
+			
+			DirectionalLight directionalLight = new DirectionalLight(0.2f, 0.2f, 0);
+			directionalLight.setDirection(0, 1, 0);
+			world.addLight(directionalLight);
+			
 			spotLight = new SpotLight(0, 1, 0);
 			spotLight.setRange(30);
-			spotLight.setPosition(0, 25, 25);
-			spotLight.setAngle((float) Math.PI / 180f);
-			spotLight.setDirection(0, 1, 0);
-//			world.addLight(spotLight);
-//			scene.setLightLevel(0.1f);
+			spotLight.setPosition(0, 0, 0);
+			spotLight.setAngle((float) Math.PI / 2f);
+			spotLight.setDirection(1, 0, 0);
+			world.addLight(spotLight);
 			
 			long seed = System.nanoTime();
 			OpenSimplexNoise noise = new OpenSimplexNoise(seed);
@@ -205,12 +209,14 @@ public class Test {
 			Texture bTexture = renderer.createTexture(new AssetInputStream("path.png"), true);
 			Texture aTexture = renderer.createTexture(new AssetInputStream("grass.png"), true);
 			TerrainTexturePack pack = new TerrainTexturePack(rTexture, gTexture, bTexture, aTexture, blendMap);
-//			TerrainGenerator gen = (x, y) -> 15 * (float) noise.eval(x * noiseResolution, y * noiseResolution);
-			TerrainGenerator gen = (x, y) -> 0;
-			world.setTerrain(0, 0, gen, pack);
-			world.setTerrain(1, 0, gen, pack);
-			world.setTerrain(0, 1, gen, pack);
-			world.setTerrain(1, 1, gen, pack);
+			TerrainGenerator gen = (x, y) -> 15 * (float) noise.eval(x * noiseResolution, y * noiseResolution);
+//			TerrainGenerator gen = (x, y) -> 0;
+			world.setTerrain(0, 0, gen, pack, 32f, 0);
+			world.setTerrain(1, 0, gen, pack, 32f, 0);
+			world.setTerrain(0, 1, gen, pack, 32f, 0);
+			world.setTerrain(1, 1, gen, pack, 32f, 0);
+			
+			spotLight.setPosition(0, (float) noise.eval(0, 0), 0);
 			
 			Texture texture1_ = renderer.createCubemap(new AssetInputStream("mp_firestorm/fire-storm_rt.tga"), 
 					new AssetInputStream("mp_firestorm/fire-storm_lf.tga"), new AssetInputStream("mp_firestorm/fire-storm_up.tga"), 
@@ -233,7 +239,7 @@ public class Test {
 			music.setLooping(true);
 //			music.play();
 			
-			particleRenderer = new ParticleRenderer(renderer, camera, new Vector2f(coreSettings.width, coreSettings.height));
+			particleRenderer = new ParticleRenderer(renderer, camera, coreSettings);
 			ParticleEmitter emitter0 = new BasicParticleEmitter(camera, aTexture, new Vector3f(0, 12, 0), 0.01f, 5f, 0.4f, 2, 10, 3f, 0.1f, 0.1f, 0.1f, new int[] { 3, 3 });
 			particleRenderer.addEmitter(emitter0);
 		});
@@ -254,13 +260,13 @@ public class Test {
 			
 			float height = 5;
 //			cameraPosition.set(0, height, dist);
-			float d = 15;
+			float d = 10;
 			cameraPosition.set(d, d, d);
 			//cameraPosition.set(dist * (float) Math.cos(Math.toRadians(t)), dist, dist * (float) Math.sin(Math.toRadians(t)));
 			camera.setPosition(cameraPosition);
 			camera.setYaw(-45);
 //								camera.setYaw(90);
-			camera.setPitch(15);
+			camera.setPitch(10);
 			//camera.setYaw((float) t);
 //			camera.setYaw(180);
 			//camera.lookAt(new Vector3f(0, height, 0));

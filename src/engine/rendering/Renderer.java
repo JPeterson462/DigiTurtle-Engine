@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import engine.CoreSettings;
 import engine.GraphicsSettings;
+import utils.RelativeStreamGenerator;
 
 public interface Renderer {
 	
@@ -23,9 +24,9 @@ public interface Renderer {
 	
 	public Texture createCubemap(InputStream right, InputStream left, InputStream top, InputStream bottom, InputStream back, InputStream front);
 	
-	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes);
+	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, RelativeStreamGenerator generator);
 
-	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, HashMap<String, String> replacements);
+	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, HashMap<String, String> replacements, RelativeStreamGenerator generator);
 	
 	public Framebuffer createFramebuffer(int colorAttachments);
 	

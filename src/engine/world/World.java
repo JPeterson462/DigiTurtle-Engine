@@ -93,11 +93,13 @@ public class World {
 		}
 	}
 
-	public void setTerrain(int i, int j, TerrainGenerator generator, TerrainTexturePack texturePack) {
+	public void setTerrain(int i, int j, TerrainGenerator generator, TerrainTexturePack texturePack, float shininess, float specularFactor) {
 		float x = i * width - (terrain.length * width) / 2;
 		float z = j * height - (terrain[0].length * height) / 2;
 		terrain[i][j] = new TerrainChunk(generator, Math.floorDiv((int) width, (int) resolution),  
 				Math.floorDiv((int) height, (int) resolution), resolution, x, z, texturePack);
+		terrain[i][j].setShininess(shininess);
+		terrain[i][j].setSpecularFactor(specularFactor);
 	}
 	
 	public TerrainChunk[][] getTerrain() {

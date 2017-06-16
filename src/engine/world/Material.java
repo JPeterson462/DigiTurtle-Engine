@@ -6,7 +6,7 @@ public class Material {
 	
 	private Texture diffuseTexture, normalTexture;
 
-	private float reflectivity, shineDamper;
+	private float shininess, specularFactor;
 
 	public Texture getDiffuseTexture() {
 		return diffuseTexture;
@@ -24,30 +24,30 @@ public class Material {
 		this.normalTexture = normalTexture;
 	}
 
-	public float getReflectivity() {
-		return reflectivity;
+	public float getShininess() {
+		return shininess;
 	}
 
-	public void setReflectivity(float reflectivity) {
-		this.reflectivity = reflectivity;
+	public void setShininess(float shininess) {
+		this.shininess = shininess;
 	}
 
-	public float getShineDamper() {
-		return shineDamper;
+	public float getSpecularFactor() {
+		return specularFactor;
 	}
 
-	public void setShineDamper(float shineDamper) {
-		this.shineDamper = shineDamper;
+	public void setSpecularFactor(float specularFactor) {
+		this.specularFactor = specularFactor;
 	}
-	
+
 	public int hashCode() {
 		int hashCode = 0;
 		hashCode = 31 * hashCode + diffuseTexture.hashCode();
 		if (normalTexture != null) {
 			hashCode = 31 * hashCode + normalTexture.hashCode();
 		}
-		hashCode = 31 * hashCode + Float.hashCode(shineDamper);
-		hashCode = 31 * hashCode + Float.hashCode(reflectivity);
+		hashCode = 31 * hashCode + Float.hashCode(shininess);
+		hashCode = 31 * hashCode + Float.hashCode(specularFactor);
 		return hashCode;
 	}
 	

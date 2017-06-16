@@ -7,7 +7,6 @@ import java.util.HashMap;
 
 import org.joml.Vector2i;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.stb.STBImage;
 
@@ -30,6 +29,7 @@ import engine.rendering.Vertex;
 import library.glfw.GLFWIcon;
 import library.glfw.GLFWMonitor;
 import library.glfw.GLFWWindow;
+import utils.RelativeStreamGenerator;
 
 public class GLRenderer implements Renderer {
 
@@ -119,13 +119,13 @@ public class GLRenderer implements Renderer {
 	}
 	
 	@Override
-	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes) {
-		return new GLShader(vertexStream, fragmentStream, attributes);
+	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, RelativeStreamGenerator generator) {
+		return new GLShader(vertexStream, fragmentStream, attributes, generator);
 	}
 
 	@Override
-	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, HashMap<String, String> replacements) {
-		return new GLShader(vertexStream, fragmentStream, attributes, replacements);
+	public Shader createShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, HashMap<String, String> replacements, RelativeStreamGenerator generator) {
+		return new GLShader(vertexStream, fragmentStream, attributes, replacements, generator);
 	}
 	
 	@Override

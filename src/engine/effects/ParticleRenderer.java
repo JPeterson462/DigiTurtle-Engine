@@ -7,6 +7,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import engine.Camera;
+import engine.CoreSettings;
 import engine.rendering.BlendMode;
 import engine.rendering.Renderer;
 import engine.rendering.Shader;
@@ -20,19 +21,19 @@ public class ParticleRenderer {
 	
 	private ArrayList<ParticleEmitter> emitters = new ArrayList<>();
 	
-	public ParticleRenderer(Renderer renderer, Camera camera, Vector2f windowSize) {
+	public ParticleRenderer(Renderer renderer, Camera camera, CoreSettings coreSettings) {
 		this.renderer = renderer;
 		HashMap<Integer, String> attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
 		attributes.put(1, "modelViewMatrix");
 		attributes.put(5, "textureAtlasOffset");
 		attributes.put(6, "blendFactor");
-		shader = renderer.createShader(getClass().getClassLoader().getResourceAsStream("engine/scene/deferred/particleVertex.glsl"), getClass().getClassLoader().getResourceAsStream("engine/scene/deferred/particleFragment.glsl"), attributes);
+		shader = renderer.createShader(getClass().getClassLoader().getResourceAsStream("engine/scene/deferred/particleVertex.glsl"), getClass().getClassLoader().getResourceAsStream("engine/scene/deferred/particleFragment.glsl"), attributes, coreSettings.shaderFinder);
 		shader.bind();
 		shader.uploadMatrix(shader.getUniformLocation("projectionMatrix"), camera.getProjectionMatrix());
 		shader.uploadInteger(shader.getUniformLocation("texture"), 0);
 		shader.uploadInteger(shader.getUniformLocation("sceneDepthTexture"), 1);
-		shader.uploadVector(shader.getUniformLocation("windowSize"), windowSize);
+		shader.uploadVector(shader.getUniformLocation("windowSize"), new Vector2f(coreSettings.width, coreSettings.height));
 	}
 	
 	public void update(float delta, Vector3f cameraPosition) {

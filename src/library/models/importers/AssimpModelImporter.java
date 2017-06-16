@@ -128,8 +128,8 @@ public class AssimpModelImporter implements ModelImporter {
 			Material material = new Material();
 			for (int j = 0; j < aiMaterial.mNumProperties(); j++) {
 				AIMaterialProperty aiMaterialProperty = AIMaterialProperty.create(aiMaterial.mProperties().get(j));
-				if (aiMaterialProperty.mKey().dataString().equalsIgnoreCase(Assimp.AI_MATKEY_REFLECTIVITY)) {
-					material.setReflectivity(aiMaterialProperty.mData().getFloat(0));
+				if (aiMaterialProperty.mKey().dataString().equalsIgnoreCase(Assimp.AI_MATKEY_SHININESS)) {
+					material.setShininess(aiMaterialProperty.mData().getFloat(0));
 				}
 			}
 			IntBuffer iflags = BufferUtils.createIntBuffer(1);

@@ -43,8 +43,8 @@ public class MeshComponent implements Component {
 			if (mesh.getMaterial().getNormalTexture() != null) {
 				material.setNormalTexture(renderer.createTexture(mesh.getMaterial().getNormalTexture(), false));
 			}
-			material.setReflectivity(mesh.getMaterial().getReflectivity());
-			material.setShineDamper(mesh.getMaterial().getShineDamper());
+			material.setShininess(mesh.getMaterial().getShininess());
+			material.setSpecularFactor(mesh.getMaterial().getSpecularFactor());
 			materials.add(material);
 		}
 	}

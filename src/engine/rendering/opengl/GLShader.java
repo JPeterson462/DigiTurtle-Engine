@@ -15,6 +15,7 @@ import com.esotericsoftware.minlog.Log;
 import engine.rendering.Shader;
 import library.opengl.GLProgram;
 import utils.IOUtils;
+import utils.RelativeStreamGenerator;
 
 public class GLShader implements Shader {
 	
@@ -22,16 +23,20 @@ public class GLShader implements Shader {
 	
 	private library.opengl.GLShader vertexShader, fragmentShader;
 
-	public GLShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes) {
+	public GLShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, RelativeStreamGenerator generator) {
 		program = new GLProgram();
 		vertexShader = new library.opengl.GLShader(GL20.GL_VERTEX_SHADER);
-		vertexShader.source(IOUtils.readStringQuietly(vertexStream));
+		String vertexSource = IOUtils.readStringQuietly(vertexStream);
+		vertexSource = substitute(vertexSource, null, generator);
+		vertexShader.source(vertexSource);
 		if (!vertexShader.compile()) {
 			Log.error("Vertex Shader did not compile: " + vertexShader.getLog());
 			throw new IllegalStateException();
 		}
 		fragmentShader = new library.opengl.GLShader(GL20.GL_FRAGMENT_SHADER);
-		fragmentShader.source(IOUtils.readStringQuietly(fragmentStream));
+		String fragmentSource = IOUtils.readStringQuietly(fragmentStream);
+		fragmentSource = substitute(fragmentSource, null, generator);
+		fragmentShader.source(fragmentSource);
 		if (!fragmentShader.compile()) {
 			Log.error("Fragment Shader did not compile: " + fragmentShader.getLog());
 			throw new IllegalStateException();
@@ -47,11 +52,11 @@ public class GLShader implements Shader {
 		}
 	}
 
-	public GLShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, HashMap<String, String> replacements) {
+	public GLShader(InputStream vertexStream, InputStream fragmentStream, HashMap<Integer, String> attributes, HashMap<String, String> replacements, RelativeStreamGenerator generator) {
 		program = new GLProgram();
 		vertexShader = new library.opengl.GLShader(GL20.GL_VERTEX_SHADER);
 		String vertexSource = IOUtils.readStringQuietly(vertexStream);
-		vertexSource = substitute(vertexSource, replacements);
+		vertexSource = substitute(vertexSource, replacements, generator);
 		vertexShader.source(vertexSource);
 		if (!vertexShader.compile()) {
 			Log.error("Vertex Shader did not compile: " + vertexShader.getLog());
@@ -59,7 +64,7 @@ public class GLShader implements Shader {
 		}
 		fragmentShader = new library.opengl.GLShader(GL20.GL_FRAGMENT_SHADER);
 		String fragmentSource = IOUtils.readStringQuietly(fragmentStream);
-		fragmentSource = substitute(fragmentSource, replacements);
+		fragmentSource = substitute(fragmentSource, replacements, generator);
 		fragmentShader.source(fragmentSource);
 		if (!fragmentShader.compile()) {
 			Log.error("Fragment Shader did not compile: " + fragmentShader.getLog());
@@ -76,11 +81,26 @@ public class GLShader implements Shader {
 		}
 	}
 	
-	private String substitute(String initial, HashMap<String, String> replacements) {
-		for (Map.Entry<String, String> replacement : replacements.entrySet()) {
-			initial = initial.replaceAll("\\{\\{" + replacement.getKey() + "\\}\\}", replacement.getValue());
+	private String substitute(String initial, HashMap<String, String> replacements, RelativeStreamGenerator generator) {
+		if (replacements != null) {
+			for (Map.Entry<String, String> replacement : replacements.entrySet()) {
+				initial = initial.replaceAll("\\{\\{" + replacement.getKey() + "\\}\\}", replacement.getValue());
+			}
 		}
-		return initial;
+		String[] lines = initial.split("\n");
+		String includeRegex = "#file \".+\"";
+		int includePrefix = 7, includeSuffix = 1;
+		for (int i = 0; i < lines.length; i++) {
+			String line = lines[i];
+			if (line.matches(includeRegex)) {
+				lines[i] = substitute(IOUtils.readStringQuietly(generator.getRelativeStream(line.substring(includePrefix, line.length() - includeSuffix))), replacements, generator);
+			}
+		}
+		String result = "";
+		for (int i = 0; i < lines.length; i++) {
+			result += lines[i] + "\n";
+		}
+		return result;
 	}
 	
 	@Override

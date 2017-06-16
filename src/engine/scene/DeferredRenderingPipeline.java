@@ -40,14 +40,14 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	private Geometry postProcessingPass;
 	
 	private int defaultGeometryShader_viewMatrix, defaultGeometryShader_modelMatrix,
-		defaultGeometryShader_projectionMatrix;
+		defaultGeometryShader_projectionMatrix, defaultGeometryShader_shininess, defaultGeometryShader_specularFactor;
 	private int defaultSkeletalGeometryShader_viewMatrix, defaultSkeletalGeometryShader_modelMatrix,
-		defaultSkeletalGeometryShader_projectionMatrix;
+		defaultSkeletalGeometryShader_projectionMatrix, defaultSkeletalGeometryShader_shininess, defaultSkeletalGeometryShader_specularFactor;
 	private int normalMappedGeometryShader_viewMatrix, normalMappedGeometryShader_modelMatrix,
-		normalMappedGeometryShader_projectionMatrix;
+		normalMappedGeometryShader_projectionMatrix, normalMappedGeometryShader_shininess, normalMappedGeometryShader_specularFactor;
 	private int normalMappedSkeletalGeometryShader_viewMatrix, normalMappedSkeletalGeometryShader_modelMatrix,
-		normalMappedSkeletalGeometryShader_projectionMatrix;
-	private int terrainShader_mvpMatrix;
+		normalMappedSkeletalGeometryShader_projectionMatrix, normalMappedSkeletalGeometryShader_shininess, normalMappedSkeletalGeometryShader_specularFactor;
+	private int terrainShader_mvpMatrix, terrainShader_shininess, terrainShader_specularFactor;
 	private int environmentShader_fogDensity, environmentShader_fogDistance, environmentShader_fogColor;
 	private int skyShader_blendFactor, skyShader_projectionMatrix, skyShader_viewMatrix, 
 		skyShader_modelMatrix;
@@ -72,20 +72,25 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		postProcessingPass = createPostProcessingPass(renderer);
 		// Framebuffers and Pipelines
 		lightingPipeline = new DeferredLightingPipeline(renderer, coreSettings, graphicsSettings, state, postProcessingPass);
-		geometryPass = renderer.createFramebuffer(2);
+		geometryPass = renderer.createFramebuffer(3);
 		fxaaPass = renderer.createFramebuffer(1);
 		environmentPass = renderer.createFramebuffer(1);
 		skyPass = renderer.createFramebuffer(1);
+		// Miscellaneous
+		HashMap<String, String> geometryDefines = new HashMap<>();
+		geometryDefines.put("maxShininess", coreSettings.maxShininess);
 		// Default Geometry
 		HashMap<Integer, String> attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
 		attributes.put(2, "in_Normal");
-		defaultGeometryShader = renderer.createShader(getShader("defaultVertex"), getShader("defaultFragment"), attributes);
+		defaultGeometryShader = renderer.createShader(getShader("defaultVertex"), getShader("defaultFragment"), attributes, geometryDefines, coreSettings.shaderFinder);
 		defaultGeometryShader.bind();
 		defaultGeometryShader_viewMatrix = defaultGeometryShader.getUniformLocation("viewMatrix");
 		defaultGeometryShader_modelMatrix = defaultGeometryShader.getUniformLocation("modelMatrix");
 		defaultGeometryShader_projectionMatrix = defaultGeometryShader.getUniformLocation("projectionMatrix");
+		defaultGeometryShader_shininess = defaultGeometryShader.getUniformLocation("shininess");
+		defaultGeometryShader_specularFactor = defaultGeometryShader.getUniformLocation("specularFactor");
 		defaultGeometryShader.uploadInteger(defaultGeometryShader.getUniformLocation("diffuseTexture"), 0);
 		defaultGeometryShader.unbind();
 		// Normal Mapped Geometry
@@ -93,11 +98,13 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
 		attributes.put(2, "in_Normal");
-		normalMappedGeometryShader = renderer.createShader(getShader("defaultVertex"), getShader("normalFragment"), attributes);
+		normalMappedGeometryShader = renderer.createShader(getShader("defaultVertex"), getShader("normalFragment"), attributes, geometryDefines, coreSettings.shaderFinder);
 		normalMappedGeometryShader.bind();
 		normalMappedGeometryShader_viewMatrix = normalMappedGeometryShader.getUniformLocation("viewMatrix");
 		normalMappedGeometryShader_modelMatrix = normalMappedGeometryShader.getUniformLocation("modelMatrix");
 		normalMappedGeometryShader_projectionMatrix = normalMappedGeometryShader.getUniformLocation("projectionMatrix");
+		normalMappedGeometryShader_shininess = normalMappedGeometryShader.getUniformLocation("shininess");
+		normalMappedGeometryShader_specularFactor = normalMappedGeometryShader.getUniformLocation("specularFactor");
 		normalMappedGeometryShader.uploadInteger(normalMappedGeometryShader.getUniformLocation("diffuseTexture"), 0);
 		normalMappedGeometryShader.uploadInteger(normalMappedGeometryShader.getUniformLocation("normalTexture"), 1);
 		normalMappedGeometryShader.unbind();
@@ -108,11 +115,13 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		attributes.put(2, "in_Normal");
 		attributes.put(3, "in_Joints");
 		attributes.put(4, "in_Weights");
-		defaultSkeletalGeometryShader = renderer.createShader(getShader("skeletalVertex"), getShader("defaultFragment"), attributes);
+		defaultSkeletalGeometryShader = renderer.createShader(getShader("skeletalVertex"), getShader("defaultFragment"), attributes, geometryDefines, coreSettings.shaderFinder);
 		defaultSkeletalGeometryShader.bind();
 		defaultSkeletalGeometryShader_viewMatrix = defaultSkeletalGeometryShader.getUniformLocation("viewMatrix");
 		defaultSkeletalGeometryShader_modelMatrix = defaultSkeletalGeometryShader.getUniformLocation("modelMatrix");
 		defaultSkeletalGeometryShader_projectionMatrix = defaultSkeletalGeometryShader.getUniformLocation("projectionMatrix");
+		defaultSkeletalGeometryShader_shininess = defaultSkeletalGeometryShader.getUniformLocation("shininess");
+		defaultSkeletalGeometryShader_specularFactor = defaultSkeletalGeometryShader.getUniformLocation("specularFactor");
 		defaultSkeletalGeometryShader.uploadInteger(defaultSkeletalGeometryShader.getUniformLocation("diffuseTexture"), 0);
 		defaultSkeletalGeometryShader.unbind();
 		// Normal Mapped Skeletal
@@ -122,17 +131,19 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		attributes.put(2, "in_Normal");
 		attributes.put(3, "in_Joints");
 		attributes.put(4, "in_Weights");
-		normalMappedSkeletalGeometryShader = renderer.createShader(getShader("skeletalVertex"), getShader("normalFragment"), attributes);
+		normalMappedSkeletalGeometryShader = renderer.createShader(getShader("skeletalVertex"), getShader("normalFragment"), attributes, geometryDefines, coreSettings.shaderFinder);
 		normalMappedSkeletalGeometryShader.bind();
 		normalMappedSkeletalGeometryShader_viewMatrix = normalMappedSkeletalGeometryShader.getUniformLocation("viewMatrix");
 		normalMappedSkeletalGeometryShader_modelMatrix = normalMappedSkeletalGeometryShader.getUniformLocation("modelMatrix");
 		normalMappedSkeletalGeometryShader_projectionMatrix = normalMappedSkeletalGeometryShader.getUniformLocation("projectionMatrix");
+		normalMappedSkeletalGeometryShader_shininess = normalMappedSkeletalGeometryShader.getUniformLocation("shininess");
+		normalMappedSkeletalGeometryShader_specularFactor = normalMappedSkeletalGeometryShader.getUniformLocation("specularFactor");
 		normalMappedSkeletalGeometryShader.uploadInteger(normalMappedSkeletalGeometryShader.getUniformLocation("diffuseTexture"), 0);
 		normalMappedSkeletalGeometryShader.unbind();
 		// FXAA Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		fxaaShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/fxaaFragment"), attributes);
+		fxaaShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/fxaaFragment"), attributes, coreSettings.shaderFinder);
 		fxaaShader.bind();
 		fxaaShader.uploadInteger(fxaaShader.getUniformLocation("diffuseTexture"), 0);
 		fxaaShader.uploadVector(fxaaShader.getUniformLocation("resolution"), new Vector2f(coreSettings.width, coreSettings.height));
@@ -142,9 +153,11 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
 		attributes.put(2, "in_Normal");
-		terrainShader = renderer.createShader(getShader("terrainVertex"), getShader("terrainFragment"), attributes);
+		terrainShader = renderer.createShader(getShader("terrainVertex"), getShader("terrainFragment"), attributes, geometryDefines, coreSettings.shaderFinder);
 		terrainShader.bind();
 		terrainShader_mvpMatrix = terrainShader.getUniformLocation("mvpMatrix");
+		terrainShader_shininess = terrainShader.getUniformLocation("shininess");
+		terrainShader_specularFactor = terrainShader.getUniformLocation("specularFactor");
 		TerrainTexturePack texturePack = new TerrainTexturePack(null, null, null, null, null);
 		texturePack.connect(terrainShader);
 		terrainShader.unbind();
@@ -152,7 +165,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		// Blur Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		blurShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/blurFragment"), attributes);
+		blurShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/blurFragment"), attributes, coreSettings.shaderFinder);
 		blurShader.bind();
 //		blurShader_horizontal = blurShader.getUniformLocation("horizontal");
 		blurShader.uploadInteger(blurShader.getUniformLocation("diffuseTexture"), 0);
@@ -161,14 +174,14 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		// Final Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		finalShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("basicFragment"), attributes);
+		finalShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("basicFragment"), attributes, coreSettings.shaderFinder);
 		finalShader.bind();
 		finalShader.uploadInteger(finalShader.getUniformLocation("diffuseTexture"), 0);
 		finalShader.unbind();
 		// Environment Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		environmentShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/environmentFragment"), attributes);
+		environmentShader = renderer.createShader(getShader("postprocessing/postVertex"), getShader("postprocessing/environmentFragment"), attributes, coreSettings.shaderFinder);
 		environmentShader.bind();
 		environmentShader.uploadInteger(environmentShader.getUniformLocation("diffuseTexture"), 0);
 		environmentShader.uploadInteger(environmentShader.getUniformLocation("depthTexture"), 1);
@@ -184,7 +197,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		// Sky Shader
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
-		skyShader = renderer.createShader(getShader("skyVertex"), getShader("skyFragment"), attributes);
+		skyShader = renderer.createShader(getShader("skyVertex"), getShader("skyFragment"), attributes, coreSettings.shaderFinder);
 		skyShader.bind();
 		skyShader.uploadInteger(skyShader.getUniformLocation("cubeMap1"), 0);
 		skyShader.uploadInteger(skyShader.getUniformLocation("cubeMap2"), 1);
@@ -247,13 +260,17 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 		geometryPass.bind();
 		renderTerrain(modelMatrix, terrainShader, camera, terrain, terrainShader_mvpMatrix);
 		renderGeometry(modelMatrix, defaultGeometryShader, camera, defaultEntities, false, false,
-				defaultGeometryShader_projectionMatrix, defaultGeometryShader_viewMatrix, defaultGeometryShader_modelMatrix);
+				defaultGeometryShader_projectionMatrix, defaultGeometryShader_viewMatrix, defaultGeometryShader_modelMatrix,
+				defaultGeometryShader_shininess, defaultGeometryShader_specularFactor);
 		renderGeometry(modelMatrix, normalMappedGeometryShader, camera, normalMappedEntities, true, false, 
-				normalMappedGeometryShader_projectionMatrix, normalMappedGeometryShader_viewMatrix, normalMappedGeometryShader_modelMatrix);
+				normalMappedGeometryShader_projectionMatrix, normalMappedGeometryShader_viewMatrix, normalMappedGeometryShader_modelMatrix,
+				normalMappedGeometryShader_shininess, normalMappedGeometryShader_specularFactor);
 		renderGeometry(modelMatrix, defaultSkeletalGeometryShader, camera, defaultSkeletalEntities, false, true,
-				defaultSkeletalGeometryShader_projectionMatrix, defaultSkeletalGeometryShader_viewMatrix, defaultSkeletalGeometryShader_modelMatrix);
+				defaultSkeletalGeometryShader_projectionMatrix, defaultSkeletalGeometryShader_viewMatrix, defaultSkeletalGeometryShader_modelMatrix,
+				defaultSkeletalGeometryShader_shininess, defaultSkeletalGeometryShader_specularFactor);
 		renderGeometry(modelMatrix, normalMappedSkeletalGeometryShader, camera, normalMappedSkeletalEntities, true, true,
-				normalMappedSkeletalGeometryShader_projectionMatrix, normalMappedSkeletalGeometryShader_viewMatrix, normalMappedSkeletalGeometryShader_modelMatrix);
+				normalMappedSkeletalGeometryShader_projectionMatrix, normalMappedSkeletalGeometryShader_viewMatrix, normalMappedSkeletalGeometryShader_modelMatrix,
+				normalMappedSkeletalGeometryShader_shininess, normalMappedSkeletalGeometryShader_specularFactor);
 		geometryPass.unbind();
 		state.lastPass = geometryPass;
 		renderer.setBlendMode(BlendMode.DEFAULT);
@@ -277,6 +294,8 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 			for (int j = 0; j < terrain[0].length; j++) {
 				GPUProfiler.start("Terrain Chunk " + (i * terrain[0].length + j));
 				TerrainChunk chunk = terrain[i][j];
+				shader.uploadFloat(terrainShader_shininess, chunk.getShininess());
+				shader.uploadFloat(terrainShader_specularFactor, chunk.getSpecularFactor());
 				geometry = chunk.getGeometry(renderer);
 				geometry.bind();
 				TerrainTexturePack oldTexturePack = texturePack;
@@ -304,7 +323,7 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 	
 	private void renderGeometry(Matrix4f modelMatrix, Shader shader, Camera camera, 
 			HashMap<Geometry, HashMap<Material, ArrayList<Entity>>> entities, boolean normalMapped, boolean skeletal,
-			int projectionMatrixLocation, int viewMatrixLocation, int modelMatrixLocation) {
+			int projectionMatrixLocation, int viewMatrixLocation, int modelMatrixLocation, int shininessLocation, int specularFactorLocation) {
 		shader.bind();
 		shader.uploadMatrix(projectionMatrixLocation, camera.getProjectionMatrix());
 		shader.uploadMatrix(viewMatrixLocation, camera.getViewMatrix());
@@ -321,6 +340,8 @@ public class DeferredRenderingPipeline implements RenderingPipeline {
 					normalTexture.activeTexture(1);
 					normalTexture.bind();
 				}
+				shader.uploadFloat(shininessLocation, entitiesMaterial.getKey().getShininess());
+				shader.uploadFloat(specularFactorLocation, entitiesMaterial.getKey().getSpecularFactor());
 				//TODO upload lighting constants
 				for (Entity entity : entitiesMaterial.getValue()) {
 					if (skeletal) {

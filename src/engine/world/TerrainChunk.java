@@ -20,6 +20,8 @@ public class TerrainChunk {
 	private Geometry geometry;
 	
 	private TerrainTexturePack texturePack;
+	
+	private float shininess, specularFactor;
 
 	public TerrainChunk(TerrainGenerator generator, int width, int height, float resolution, float x, float z, TerrainTexturePack texturePack) {
 		this.texturePack = texturePack;
@@ -46,6 +48,8 @@ public class TerrainChunk {
 				indices.add(bottomRight);
 			}
 		}
+		shininess = 32f;
+		specularFactor = 1f;
 	}
 
 	private Vector3f calculateNormal(float resolution, Vector3f position) {
@@ -71,6 +75,22 @@ public class TerrainChunk {
 			create(renderer);
 		}
 		return getGeometry();
+	}
+
+	public float getShininess() {
+		return shininess;
+	}
+
+	public void setShininess(float shininess) {
+		this.shininess = shininess;
+	}
+
+	public float getSpecularFactor() {
+		return specularFactor;
+	}
+
+	public void setSpecularFactor(float specularFactor) {
+		this.specularFactor = specularFactor;
 	}
 
 	public float getHeightAt(float x, float z) {

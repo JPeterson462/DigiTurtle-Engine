@@ -93,6 +93,9 @@
 	- Rewrote point lights, spot lights, and directional lights
 	- Refactored lighting code
 	- Custom import API for shaders ('#file "..."')
+6/16/17:
+	- Continued redoing point lights
+	- Point light volumes
 	
 ~ Merge fog and depth of field
 ~ Moved ambient light calculation to HDR shader
@@ -100,7 +103,6 @@
 
 -- light volumes
 -- lights in batches of N
--- sending material?
 -- packing normal? (in vec2)
 
 -- physics jittering

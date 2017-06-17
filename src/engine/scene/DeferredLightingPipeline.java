@@ -5,8 +5,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.opengl.EXTDepthBoundsTest;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL32;
 
 import engine.Camera;
 import engine.CoreSettings;
@@ -22,13 +28,14 @@ import engine.world.DirectionalLight;
 import engine.world.Light;
 import engine.world.PointLight;
 import engine.world.SpotLight;
+import utils.SphereGenerator;
 import utils.profiling.GPUProfiler;
 
 public class DeferredLightingPipeline {
 
 	private Shader pointLightShader, spotLightShader, directionalLightShader, hdrShader, bloomShader;
 
-	private Geometry lightingFullscreenPass, postProcessingPass;
+	private Geometry lightingFullscreenPass, postProcessingPass, pointLightPass;
 
 	private Framebuffer lightingPass, bloomPass, hdrPass;
 
@@ -75,14 +82,20 @@ public class DeferredLightingPipeline {
 		bloomShader.bind();
 		bloomShader.uploadInteger(bloomShader.getUniformLocation("diffuseTexture"), 0);
 		bloomShader.unbind();
+		// Light Volumes
+		ArrayList<Vertex> vertices = new ArrayList<>();
+		ArrayList<Integer> indices = new ArrayList<>();
+		SphereGenerator.generateSphere(vertices, indices);
+		pointLightPass = renderer.createGeometry(vertices, indices, Vertex.POSITION_BIT);
 		// General Light Shader
 		lightDefines.put("maxShininess", coreSettings.maxShininess);
 		attributes = new HashMap<>();
 		attributes.put(0, "in_Position");
 		attributes.put(1, "in_TextureCoord");
 		lightDefines.put("type", "1");
-		pointLightShader = renderer.createShader(getShader("lightVertex"), getShader("pointLightFragment"), attributes, lightDefines, coreSettings.shaderFinder);
+		pointLightShader = renderer.createShader(getShader("lighting/pointLightVertex"), getShader("lighting/pointLightFragment"), attributes, lightDefines, coreSettings.shaderFinder);
 		pointLightShader.bind();
+		pointLightShader.uploadVector(pointLightShader.getUniformLocation("screenSize"), new Vector2f(1f / (float) coreSettings.width, 1f / (float) coreSettings.height));
 		pointLightShader_radius = pointLightShader.getUniformLocation("radius");
 		pointLightShader_modelMatrix = pointLightShader.getUniformLocation("modelMatrix");
 		pointLightShader_viewMatrix = pointLightShader.getUniformLocation("viewMatrix");
@@ -90,7 +103,7 @@ public class DeferredLightingPipeline {
 		pointLightShader_invProjectionMatrix = pointLightShader.getUniformLocation("invProjectionMatrix");
 		pointLightShader.unbind();
 		lightDefines.put("type", "2");
-		spotLightShader = renderer.createShader(getShader("lightVertex"), getShader("spotLightFragment"), attributes, lightDefines, coreSettings.shaderFinder);
+		spotLightShader = renderer.createShader(getShader("lighting/lightVertex"), getShader("lighting/spotLightFragment"), attributes, lightDefines, coreSettings.shaderFinder);
 		spotLightShader.bind();
 		spotLightShader_radius = spotLightShader.getUniformLocation("radius");
 		spotLightShader_modelMatrix = spotLightShader.getUniformLocation("modelMatrix");
@@ -99,7 +112,7 @@ public class DeferredLightingPipeline {
 		spotLightShader_invViewProjectionMatrix = spotLightShader.getUniformLocation("invViewProjectionMatrix");
 		spotLightShader.unbind();
 		lightDefines.put("type", "0");
-		directionalLightShader = renderer.createShader(getShader("lightVertex"), getShader("directionalLightFragment"), attributes, lightDefines, coreSettings.shaderFinder);
+		directionalLightShader = renderer.createShader(getShader("lighting/lightVertex"), getShader("lighting/directionalLightFragment"), attributes, lightDefines, coreSettings.shaderFinder);
 		directionalLightShader.bind();
 		directionalLightShader_modelMatrix = directionalLightShader.getUniformLocation("modelMatrix");
 		directionalLightShader_viewMatrix = directionalLightShader.getUniformLocation("viewMatrix");
@@ -198,12 +211,15 @@ public class DeferredLightingPipeline {
 		camera.getProjectionMatrix().invert(inverseProjectionMatrix);
 		camera.getViewMatrix().invert(inverseViewMatrix);
 		getLightUniforms();
-		lightingFullscreenPass.bind();
 
 		Matrix4f lightMatrix = new Matrix4f();
+//		Quaternionf identityQuaternion = new Quaternionf();
+		
+		boolean depthBoundsSupported = GL.getCapabilities().GL_EXT_depth_bounds_test;
 		
 		Vector4f pointLightPosition4 = new Vector4f();	
 		Vector3f pointLightPosition3 = new Vector3f();
+		pointLightPass.bind();
 		pointLightShader.bind();
 		pointLightShader.uploadMatrix(pointLightShader_projectionMatrix, camera.getProjectionMatrix());
 		pointLightShader.uploadMatrix(pointLightShader_viewMatrix, camera.getViewMatrix());
@@ -217,19 +233,51 @@ public class DeferredLightingPipeline {
 			Light light = lights.get(i);
 			if (light instanceof PointLight) {
 				PointLight pointLight = (PointLight) light;
-				lightMatrix.identity();
-				pointLightShader.uploadMatrix(pointLightShader_modelMatrix, lightMatrix);
-				pointLightShader.uploadFloat(pointLightShader_radius, pointLight.getRange());
-				pointLightShader.uploadVector(pointLight_lightColorUniform, pointLight.getColor());
 				pointLightPosition4.set(pointLight.getPosition(), 1);
 				camera.getViewMatrix().transform(pointLightPosition4);
 				pointLightPosition3.set(pointLightPosition4.x, pointLightPosition4.y, pointLightPosition4.z);
+				lightMatrix.identity().translationRotateScale(0, 0, 0, 0, 0, 0, 1, pointLight.getRange(), pointLight.getRange(), pointLight.getRange());
+//				lightMatrix.identity().translationRotateScale(pointLightPosition3, identityQuaternion, pointLight.getRange());
+				pointLightShader.uploadMatrix(pointLightShader_modelMatrix, lightMatrix);
+				pointLightShader.uploadFloat(pointLightShader_radius, pointLight.getRange());
+				pointLightShader.uploadVector(pointLight_lightColorUniform, pointLight.getColor());
 				pointLightShader.uploadVector(pointLight_lightPosUniform, pointLightPosition3);
-				lightingFullscreenPass.render();
+//				pointLightPass.render();
+				GL11.glEnable(GL11.GL_CULL_FACE);
+				GL11.glEnable(GL11.GL_DEPTH_TEST);
+				GL11.glDepthFunc(GL11.GL_LEQUAL);
+				GL11.glDepthMask(false);
+				GL11.glEnable(GL32.GL_DEPTH_CLAMP);
+				if (depthBoundsSupported) {
+					GL11.glEnable(EXTDepthBoundsTest.GL_DEPTH_BOUNDS_TEST_EXT);
+					EXTDepthBoundsTest.glDepthBoundsEXT(graphicsSettings.near, graphicsSettings.far);
+					pointLightPass.render();
+					GL11.glDisable(EXTDepthBoundsTest.GL_DEPTH_BOUNDS_TEST_EXT);
+				} else {
+					GL11.glEnable(GL11.GL_STENCIL_TEST);
+					GL11.glCullFace(GL11.GL_BACK);
+					GL11.glStencilFunc(GL11.GL_ALWAYS, 0, 0xFF);
+					GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_INCR);
+					GL11.glColorMask(false, false, false, false);
+					pointLightPass.render();
+					GL11.glCullFace(GL11.GL_FRONT);
+					GL11.glStencilFunc(GL11.GL_EQUAL, 0, 0xFF);
+					GL11.glStencilOp(GL11.GL_ZERO, GL11.GL_ZERO, GL11.GL_ZERO);
+					GL11.glColorMask(true, true, true, true);
+					pointLightPass.render();
+					GL11.glDisable(GL11.GL_STENCIL_TEST);
+				}
+				GL11.glDepthFunc(GL11.GL_LEQUAL);
+				GL11.glDepthMask(true);
+				GL11.glDisable(GL32.GL_DEPTH_CLAMP);
+				GL11.glDisable(GL11.GL_CULL_FACE);
 			}
 		}
 		pointLightShader.unbind();
-
+		pointLightPass.unbind();
+		
+		lightingFullscreenPass.bind();
+		
 		spotLightShader.bind();
 		spotLightShader.uploadMatrix(spotLightShader_projectionMatrix, camera.getProjectionMatrix());
 		spotLightShader.uploadMatrix(spotLightShader_viewMatrix, camera.getViewMatrix());

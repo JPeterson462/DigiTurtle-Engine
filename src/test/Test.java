@@ -183,9 +183,9 @@ public class Test {
 			pointLight2.setRange(20);
 			pointLight2.setPosition(0, 0, 0);
 			world.addLight(pointLight2);
-			PointLight pointLight3 = new PointLight(1, 1, 0);
-			pointLight3.setRange(10);
-			pointLight3.setPosition(0, 2, 0);
+			PointLight pointLight3 = new PointLight(1, 0, 0);
+			pointLight3.setRange(8);
+			pointLight3.setPosition(0, 0, 0);
 			world.addLight(pointLight3);
 			
 			DirectionalLight directionalLight = new DirectionalLight(0.2f, 0.2f, 0);

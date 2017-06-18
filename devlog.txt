@@ -96,6 +96,10 @@
 6/16/17:
 	- Continued redoing point lights
 	- Point light volumes
+6/17/17:
+	- Updated spot lights (still a major WIP)
+6/18/17:
+	- Fixed spot lights (and other lights)
 	
 ~ Merge fog and depth of field
 ~ Moved ambient light calculation to HDR shader

@@ -177,11 +177,11 @@ public class Test {
 			world.setAmbientLight(new Vector3f(1, 1, 1), lightLevel);
 			PointLight pointLight = new PointLight(1, 1, 1);
 			pointLight.setRange(20);
-			pointLight.setPosition(0, 0, 0);
+			pointLight.setPosition(10, 0, 0);
 			world.addLight(pointLight);
 			PointLight pointLight2 = new PointLight(1, 0, 1);
 			pointLight2.setRange(20);
-			pointLight2.setPosition(0, 0, 0);
+			pointLight2.setPosition(0, 2, 0);
 			world.addLight(pointLight2);
 			PointLight pointLight3 = new PointLight(1, 0, 0);
 			pointLight3.setRange(8);
@@ -189,14 +189,14 @@ public class Test {
 			world.addLight(pointLight3);
 			
 			DirectionalLight directionalLight = new DirectionalLight(0.2f, 0.2f, 0);
-			directionalLight.setDirection(0, 1, 0);
+			directionalLight.setDirection(1, 0.8f, 0.6f);
 			world.addLight(directionalLight);
 			
 			spotLight = new SpotLight(0, 1, 0);
-			spotLight.setRange(30);
+			spotLight.setRange(10);
 			spotLight.setPosition(0, 0, 0);
 			spotLight.setAngle((float) Math.PI / 2f);
-			spotLight.setDirection(1, 0, 0);
+			spotLight.setDirection(0, -1, 0);
 			world.addLight(spotLight);
 			
 			long seed = System.nanoTime();

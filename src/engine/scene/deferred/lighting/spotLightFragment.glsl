@@ -40,7 +40,7 @@ void main(void) {
 	vec3 normal = texture2D(normalTexture, textureCoord).rgb * 2.0 - 1.0;
 	vec3 albedo = texture2D(diffuseTexture, textureCoord).rgb;
 	float attenuation = 1.0 - clamp(distance / radius, 0.0, 1.0);
-	float coneFactor = dot(lightDirection, lightDir);
+	float coneFactor = dot(normalize(lightDirection), lightDir);
 	if (coneFactor < lightRange) {
 		discard;
 	}
@@ -55,6 +55,10 @@ void main(void) {
 	vec3 halfwayDir = normalize(lightDir + viewDir);
 	float specularCoefficient = max(dot(halfwayDir, normal), 0.0);
 	float specularFactor = pow(specularCoefficient, shininess);
+	if (shininess <= 1.0) {
+		specularFactor = 0.0;
+	}
+	specularFactor *= diffuseFactor;
 	vec3 specular = specularFactor * specularColor * lightColor * attenuation;
 	
 	out_Color = vec4(diffuse + specular, 1.0);

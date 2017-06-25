@@ -100,10 +100,14 @@
 	- Updated spot lights (still a major WIP)
 6/18/17:
 	- Fixed spot lights (and other lights)
+6/24-25/17:
+	- Truetype font importing
 	
 ~ Merge fog and depth of field
 ~ Moved ambient light calculation to HDR shader
 ~ Specialized lighting shaders
+
+https://learnopengl.com/#!PBR/Lighting
 
 -- light volumes
 -- lights in batches of N

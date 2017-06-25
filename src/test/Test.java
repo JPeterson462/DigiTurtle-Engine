@@ -173,7 +173,7 @@ public class Test {
 			
 			world.addEntity(entity);
 			
-			float lightLevel = 0.0f;
+			float lightLevel = 0.2f;
 			world.setAmbientLight(new Vector3f(1, 1, 1), lightLevel);
 			PointLight pointLight = new PointLight(1, 1, 1);
 			pointLight.setRange(20);
@@ -194,10 +194,10 @@ public class Test {
 			
 			spotLight = new SpotLight(0, 1, 0);
 			spotLight.setRange(10);
-			spotLight.setPosition(0, 0, 0);
+			spotLight.setPosition(0, 2, 0);
 			spotLight.setAngle((float) Math.PI / 2f);
-			spotLight.setDirection(0, -1, 0);
-			world.addLight(spotLight);
+			spotLight.setDirection(1, 0, 1);
+//			world.addLight(spotLight);
 			
 			long seed = System.nanoTime();
 			OpenSimplexNoise noise = new OpenSimplexNoise(seed);

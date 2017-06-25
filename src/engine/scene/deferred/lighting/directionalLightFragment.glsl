@@ -40,6 +40,10 @@ void main(void) {
 	vec3 halfwayDir = normalize(lightDirection + viewDir);
 	float specularCoefficient = max(dot(halfwayDir, normal), 0.0);
 	float specularFactor = pow(specularCoefficient, shininess);
+	if (shininess <= 1.0) {
+		specularFactor = 0.0;
+	}
+	specularFactor *= diffuseFactor;
 	vec3 specular = specularFactor * specularColor * lightColor;
 	
 	out_Color = vec4(diffuse + specular, 1.0);
